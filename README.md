@@ -72,12 +72,16 @@ Based on [Andrej Karpathy's LLM Wiki pattern](https://gist.github.com/karpathy/4
 ## Quick start
 
 ```bash
-git clone https://github.com/cmblir/memex.git
-cd memex
+git clone https://github.com/tricaricolore/llm-wiki-dashboard.git
+cd llm-wiki-dashboard
 python dashboard/server.py    # Python 3.10+, zero pip deps
 ```
 
 Open `http://localhost:8090`. Done.
+
+The repository starts as a clean local wiki vault. Demo content is kept under
+`examples/karpathy-demo/` so new projects do not inherit sample sources or
+generated pages.
 
 <br />
 
@@ -271,13 +275,14 @@ This is Python's empty-JSON error. Fixed — all endpoints now return valid JSON
 ## Repository layout
 
 ```
-raw/                       Immutable sources
-wiki/                      Claude-maintained pages
+raw/                       Immutable local sources for this vault
+wiki/                      LLM-maintained pages for this vault
   index.md                 Content catalog (auto flat/hierarchical)
   log.md                   Activity timeline
   overview.md              Stats + coverage areas
 ingest-reports/            One WHY report per ingest
 reflect-reports/           Weekly meta-analyses
+examples/karpathy-demo/    Sample raw/wiki/report content
 dashboard/
   server.py                Zero-dep API server
   index.html               Single-file dashboard UI
