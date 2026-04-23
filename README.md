@@ -1,364 +1,233 @@
-<div align="center">
+# LLM Wiki Dashboard
 
-<br />
+Local-first dashboard for building project knowledge bases with Markdown,
+Obsidian, Git, and an LLM assistant.
 
-<img src="dashboard/claude_character.svg" width="100" alt="Memex character" />
+The goal is to let each team keep its knowledge base close to the project:
+sources stay local in `raw/`, generated wiki pages live in `wiki/`, Obsidian is
+used for reading and editing, and Git provides history, review, rollback, and
+push to the project repository.
 
-<h1>Memex</h1>
+This project is based on Andrej Karpathy's
+[LLM Wiki pattern](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f).
 
-<p><strong>A personal knowledge base that writes itself.</strong></p>
+## Intended Usage
 
-<p>
-Drop a source. Claude does the bookkeeping.<br/>
-Your knowledge compounds.
-</p>
+Use this repository as a local tool/template, then create one clean wiki vault
+per project.
 
-<p>
-<a href="#quick-start"><img alt="Quick start" src="https://img.shields.io/badge/quick%20start-60s-111?style=flat-square" /></a>
-&nbsp;
-<img alt="Dependencies" src="https://img.shields.io/badge/pip%20deps-0-111?style=flat-square" />
-&nbsp;
-<img alt="License" src="https://img.shields.io/badge/license-MIT-111?style=flat-square" />
-&nbsp;
-<img alt="Made with Claude Code" src="https://img.shields.io/badge/made%20with-Claude%20Code-111?style=flat-square" />
-&nbsp;
-<a href="README-ko.md"><img alt="한국어" src="https://img.shields.io/badge/한국어-README-111?style=flat-square" /></a>
-</p>
-
-<br />
-
-<p>
-<em>"Obsidian is the IDE. Claude is the programmer. The wiki is the codebase."</em>
-</p>
-
-<br />
-
-<img src="docs/demo.gif" width="100%" alt="Memex dashboard demo" />
-
-</div>
-
----
-
-## Why?
-
-Most LLM-plus-documents setups **re-derive knowledge on every query**. RAG finds chunks, the model stitches an answer, nothing is kept. Ten queries against the same docs → ten rediscoveries.
-
-**Memex inverts this.** You add a source once. Claude reads it, integrates it into a persistent wiki, flags contradictions against older pages, wires up citations, and commits the result. By query #10, the wiki is doing the synthesis for free — the bookkeeping has already happened.
-
-Based on [Andrej Karpathy's LLM Wiki pattern](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f). Named for [Vannevar Bush's 1945 Memex](https://en.wikipedia.org/wiki/Memex).
-
----
-
-## The pattern
-
-```
-   raw/              Original sources. Immutable. 4-layer protection.
-     │
-     ▼  ingest
-   wiki/             Claude-maintained pages. Entities, concepts, summaries.
-     │               Inline citations [^src-*]. Auto cross-referenced.
-     │               Every change is a git commit.
-     ▼
-   Obsidian graph + Dashboard
-                     Browse, query, analyze, reflect, compare, write.
+```text
+~/llm-wikis/llm-wiki-dashboard      tool/template repository
+~/llm-wikis/project-alpha-wiki      project wiki vault
+~/llm-wikis/project-beta-wiki       project wiki vault
+~/llm-wikis/project-gamma-wiki      project wiki vault
 ```
 
-- **You**: curate sources, ask questions, direct the analysis.
-- **Claude**: summarize, cross-reference, cite, detect contradictions, file.
-- **The wiki**: compounds.
+Each project vault is independent:
 
----
+- `raw/` contains immutable local source documents.
+- `wiki/` contains LLM-maintained Obsidian pages.
+- `ingest-reports/` records why an ingest changed the wiki.
+- Git tracks every approved change.
+- Teams decide when and where to push the vault.
 
-## Quick start
+## Requirements
+
+- Python 3.10 or newer.
+- Git.
+- A browser.
+- Obsidian, optional but recommended.
+- Claude Code CLI for the current implementation.
+
+Install Claude Code CLI:
 
 ```bash
+npm install -g @anthropic-ai/claude-code
+claude
+```
+
+The current code shells out to `claude -p`. A future provider layer can add
+Copilot CLI or other local/enterprise-approved providers.
+
+## Quick Start
+
+Clone the tool repository:
+
+```bash
+mkdir -p ~/llm-wikis
+cd ~/llm-wikis
 git clone https://github.com/tricaricolore/llm-wiki-dashboard.git
 cd llm-wiki-dashboard
-python dashboard/server.py    # Python 3.10+, zero pip deps
 ```
 
-Open `http://localhost:8090`. Done.
-
-The repository starts as a clean local wiki vault. Demo content is kept under
-`examples/karpathy-demo/` so new projects do not inherit sample sources or
-generated pages.
-
-<br />
-
-<details>
-<summary><strong>Requirements</strong></summary>
-
-- Python 3.10+ (stdlib only)
-- [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code) — `npm install -g @anthropic-ai/claude-code`
-- A browser
-- Obsidian — *optional* but pre-configured. The repo ships as a ready Obsidian vault.
-
-</details>
-
----
-
-## What you get
-
-<table>
-<tr>
-<td width="50%" valign="top">
-
-### ◆ Core operations
-- **Ingest** — Paste source → diff + WHY report + auto-commit
-- **Query** — Ask the wiki. Tracks files read, Wiki Ratio, tokens
-- **Lint** — 16-point health check + auto-fix
-- **Reflect** — Weekly meta-analysis of the whole wiki
-- **Write** — Draft essays from the wiki, citations auto-inserted
-- **Compare** — Two pages → similarities/differences
-- **Review** — Spaced review of stale pages
-- **Search** — TF-IDF full-text, zero deps
-- **Slides** — Export any page as a Marp deck
-- **Graph** — Force-directed knowledge graph
-
-</td>
-<td width="50%" valign="top">
-
-### ◆ Infrastructure
-- **Git-backed history** — every ingest is a commit
-- **One-click revert** — undo any ingest
-- **Inline citations** — `[^src-*]` rendered as badges
-- **raw/ immutability** — 4 layers of protection
-- **Adaptive indexing** — flat → hierarchical → indexed (auto)
-- **Schema (CLAUDE.md)** — the rules Claude follows
-- **WHY reports** — every ingest explains its own decisions
-- **Query log** — drives the Wiki Ratio gauge
-- **Bilingual UI** — EN / 한국어 toggle
-- **Model selector** — Opus / Sonnet / Haiku
-
-</td>
-</tr>
-</table>
-
----
-
-## The dashboard
-
-<div align="center">
-<em>Monochrome. Categorized. Interactive.</em>
-</div>
-
-<br />
-
-- **Black & white** — color is reserved for status and diffs only.
-- **Categorized toolbar** — 13 operations in 5 dropdowns (Work, Analyze, Browse, Create, More).
-- **Resizable sidebar** — drag the edge, or `Cmd/Ctrl + B` to collapse.
-- **Folder continuous view** — click a folder *name* to read all its pages in one scroll.
-- **Live status** — Claude CLI + Obsidian detection, raw facts only.
-- **Wiki Ratio gauge** — measures how often Claude reaches into the wiki vs raw sources. Below 0.4 means your wiki isn't replacing raw yet.
-- **Floating Claude character** — click for an in-dashboard chatbot that answers questions *about the dashboard*. Wiki-content questions get redirected to Query.
-
-### Views
-
-<table>
-<tr>
-<td width="50%"><img src="docs/screenshots/home.png" alt="Overview" /></td>
-<td width="50%"><img src="docs/screenshots/graph.png" alt="Knowledge graph" /></td>
-</tr>
-<tr>
-<td align="center"><sub><strong>Overview</strong> — wiki stats, coverage areas, getting started</sub></td>
-<td align="center"><sub><strong>Graph</strong> — force-directed knowledge graph</sub></td>
-</tr>
-<tr>
-<td width="50%"><img src="docs/screenshots/ingest.png" alt="Ingest" /></td>
-<td width="50%"><img src="docs/screenshots/history.png" alt="History" /></td>
-</tr>
-<tr>
-<td align="center"><sub><strong>Ingest</strong> — paste source, Claude generates pages</sub></td>
-<td align="center"><sub><strong>History</strong> — git-backed ingest timeline with revert</sub></td>
-</tr>
-<tr>
-<td width="50%"><img src="docs/screenshots/provenance.png" alt="Provenance" /></td>
-<td width="50%"><img src="docs/screenshots/query.png" alt="Query" /></td>
-</tr>
-<tr>
-<td align="center"><sub><strong>Provenance</strong> — per-page citation coverage</sub></td>
-<td align="center"><sub><strong>Query</strong> — ask the wiki, tracks files read</sub></td>
-</tr>
-</table>
-
-<sub><em>Want your own screenshots? Run <code>docs/capture.sh</code> while the server is up.</em></sub>
-
----
-
-## How knowledge accumulates
-
-```
-You drop a source ─────►  raw/article.md
-                          │
-                          ▼
-  Claude reads it, writes:
-  ├─ wiki/source-article.md     (source summary)
-  ├─ wiki/entity-X.md           (new or updated)
-  ├─ wiki/concept-Y.md          (new or updated, with citations)
-  ├─ wiki/index.md              (updated)
-  ├─ wiki/log.md                (appended)
-  └─ ingest-reports/...md       (WHY report)
-
-                          │
-                          ▼
-  git commit "ingest: <title>"
-                          │
-                          ▼
-  Dashboard shows: diff + reasoning + approve / revert
-```
-
-Every ingest is revertable. Every claim has a citation. Every contradiction gets one of three policies (Historical / Disputed / Superseded).
-
----
-
-## CLI usage
-
-Everything in the dashboard works from the terminal:
+Run the dashboard directly from this repository:
 
 ```bash
-claude
-"Ingest raw/some-article.md"
-"What is Self-Attention?"
-"Lint the wiki"
-"Reflect on the last 10 ingests"
+python dashboard/server.py
 ```
 
-The dashboard shells out to `claude -p` underneath. Use whichever you prefer; they share the same state.
+Open:
 
----
+```text
+http://localhost:8090
+```
+
+The repository root starts as a clean vault with three starter pages. Demo
+content is kept under `examples/karpathy-demo/`.
+
+## Create A Project Vault
+
+For real use, create a separate vault for each project:
+
+```bash
+python scripts/init-vault.py ~/llm-wikis/project-alpha-wiki --git
+cd ~/llm-wikis/project-alpha-wiki
+python dashboard/server.py
+```
+
+Then open `http://localhost:8090` and open the same folder in Obsidian.
+
+With `--git`, the script initializes a Git repository and creates an initial
+commit. Add your project remote later:
+
+```bash
+git remote add origin <project-wiki-repo-url>
+git push -u origin main
+```
+
+## Daily Workflow
+
+1. Add original documents to `raw/`, or paste a source in the dashboard Ingest view.
+2. Run ingest from the dashboard.
+3. Review generated pages in `wiki/`, diffs, citations, and ingest report.
+4. Open the vault in Obsidian for reading, linking, and manual edits.
+5. Commit approved changes.
+6. Push to the project wiki repository when the team wants to share them.
+
+## Knowledge Model
+
+```text
+raw/              Original sources. Treat as immutable.
+  |
+  v
+ingest            LLM reads sources and updates wiki pages.
+  |
+  v
+wiki/             Obsidian Markdown pages with links and citations.
+  |
+  v
+Git               Commit history, review, rollback, and team sync.
+```
+
+The important rule is that `raw/` is source-of-truth input. If a source is wrong,
+do not edit it in place; create wiki notes that explain the correction.
+
+## Dashboard Features
+
+- Ingest: paste source content and generate wiki updates.
+- Query: ask questions against the wiki and track files read.
+- Search: local full-text search.
+- Graph: force-directed view of wiki links.
+- Provenance: citation coverage per page.
+- History: ingest timeline backed by Git commits.
+- Revert: undo an ingest commit.
+- Lint: check wiki health and schema consistency.
+- Reflect: generate periodic meta-analysis.
+- Write and Compare: draft from wiki content or compare pages.
+
+## Repository Layout
+
+```text
+raw/                       immutable local sources for this vault
+wiki/                      LLM-maintained Obsidian pages
+  index.md                 content catalog
+  log.md                   activity timeline
+  overview.md              starter overview page
+ingest-reports/            one WHY report per ingest
+reflect-reports/           meta-analysis reports
+plans/                     planning notes
+dashboard/                 local web app and API server
+scripts/init-vault.py      create a clean vault for another project
+examples/karpathy-demo/    sample raw/wiki/report content
+CLAUDE.md                  wiki schema and LLM operating rules
+.obsidian/                 Obsidian vault settings
+```
 
 ## Configuration
 
+Environment variables:
+
 ```bash
-# Environment variables
-CLAUDE_TIMEOUT=1200  python dashboard/server.py   # 20-min timeout for large ingests
+CLAUDE_TIMEOUT=1200 python dashboard/server.py
 CLAUDE_QUICK_TIMEOUT=30
 CLAUDE_TOOLS=Edit,Write,Read,Glob,Grep
 ```
 
-Or edit `CLAUDE.md` — the schema Claude follows. Frontmatter rules, citation rules, contradiction resolution, ingest workflow, lint checklist. Changes take effect on the next operation.
+Project rules live in `CLAUDE.md`. Edit it to change frontmatter rules,
+citation rules, contradiction handling, ingest workflow, and lint behavior.
 
----
+## Local-First Notes
+
+- The dashboard runs on `localhost`.
+- Source documents are read from the local filesystem.
+- No central database is required.
+- Git push is explicit and controlled by the project team.
+- Do not put confidential sources in a remote repository unless that repository
+  is approved for that data.
+
+## Demo Content
+
+The original sample vault is preserved in:
+
+```text
+examples/karpathy-demo/
+```
+
+Use it only for reference, screenshots, or experiments. New project vaults
+created with `scripts/init-vault.py` do not include demo sources or pages.
 
 ## Troubleshooting
 
-<details>
-<summary><strong>"Claude CLI timeout"</strong></summary>
+### Claude CLI timeout
 
-Default is 10 min. Increase with `CLAUDE_TIMEOUT=1800`. The dashboard shows a **Run Claude CLI diagnostic** button on timeout — it calls `/api/claude/diagnose` and checks installation, auth, response time, model speed.
+Increase the timeout for larger ingests:
 
-</details>
-
-<details>
-<summary><strong>"vault not registered"</strong></summary>
-
-Hover the status bar — it shows your project path vs Obsidian's known vaults. Click **Register** to auto-add to `obsidian.json`, then restart Obsidian.
-
-</details>
-
-<details>
-<summary><strong>Slow ingestion</strong></summary>
-
-Opus 4.7 is slowest. Switch to **Sonnet 4.6** or **Haiku 4.5** in the header dropdown for faster ingests.
-
-</details>
-
-<details>
-<summary><strong>Expecting value: line 1 column 1</strong></summary>
-
-This is Python's empty-JSON error. Fixed — all endpoints now return valid JSON even on crash. If you still see it, check `/tmp/wiki-server.log` for the traceback.
-
-</details>
-
----
-
-## Repository layout
-
-```
-raw/                       Immutable local sources for this vault
-wiki/                      LLM-maintained pages for this vault
-  index.md                 Content catalog (auto flat/hierarchical)
-  log.md                   Activity timeline
-  overview.md              Stats + coverage areas
-ingest-reports/            One WHY report per ingest
-reflect-reports/           Weekly meta-analyses
-examples/karpathy-demo/    Sample raw/wiki/report content
-dashboard/
-  server.py                Zero-dep API server
-  index.html               Single-file dashboard UI
-  provenance.py            Citation parsing + coverage
-  index_strategy.py        Adaptive indexing
-  claude_character.svg     The floating helper
-CLAUDE.md                  Schema (the rules Claude follows)
-.obsidian/                 Pre-configured vault
+```bash
+CLAUDE_TIMEOUT=1800 python dashboard/server.py
 ```
 
----
+You can also switch to a faster model from the dashboard header.
 
-## API
+### Claude CLI not connected
 
-Dashboard talks to the server via 30+ endpoints:
+Run this in a terminal:
 
-<details>
-<summary><strong>Show all endpoints</strong></summary>
+```bash
+claude
+```
 
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/api/status` | Claude CLI + Obsidian — raw facts only |
-| GET | `/api/wiki` | Full wiki data |
-| GET | `/api/folders` | Folder tree |
-| GET | `/api/hash` | Change detection |
-| GET | `/api/schema` | Read CLAUDE.md |
-| GET | `/api/history` | Ingest commits |
-| GET | `/api/provenance` | Citation coverage |
-| GET | `/api/query-stats` | Wiki Ratio |
-| GET | `/api/index/status` | Strategy badge |
-| GET | `/api/raw/integrity` | raw/ tampering check |
-| GET | `/api/reflect/status` | Last reflect date |
-| GET | `/api/review/list` | Stale pages |
-| GET | `/api/settings` | Model selector data |
-| GET | `/api/claude/diagnose` | CLI quick check |
-| POST | `/api/ingest` | New source → wiki pages |
-| POST | `/api/query` | Ask the wiki |
-| POST | `/api/query/save` | Save answer as page |
-| POST | `/api/lint` / `/api/lint/fix` | Health check |
-| POST | `/api/reflect` | Meta-analysis |
-| POST | `/api/write` | Writing companion |
-| POST | `/api/compare` | Two-page analysis |
-| POST | `/api/review/refresh` | Refresh a stale page |
-| POST | `/api/slides` | Marp export |
-| POST | `/api/search` | TF-IDF search |
-| POST | `/api/suggest/sources` | What to ingest next |
-| POST | `/api/assistant` | Dashboard helper chatbot |
-| POST | `/api/provenance/fix` | Add missing citations |
-| POST | `/api/index/rebuild` | Force index rebuild |
-| POST | `/api/revert` | Revert an ingest |
-| POST | `/api/page` / `/update` / `/delete` | Page CRUD |
-| POST | `/api/folder` | Create folder |
-| POST | `/api/schema` | Update CLAUDE.md |
-| POST | `/api/settings` | Change Claude model |
-| POST | `/api/obsidian/register` | Add this folder to obsidian.json |
+Complete login/authentication, then restart the dashboard.
 
-</details>
+### Obsidian vault not registered
 
----
+Open the generated project vault folder directly from Obsidian. The dashboard can
+also register the current folder in Obsidian from the status area.
 
-## Keyboard shortcuts
+### Empty or invalid JSON response
 
-- `Cmd/Ctrl + B` — toggle sidebar
-- `Esc` — close dropdowns / modals
+Restart the server and check the terminal output. The server is a local Python
+process, so API errors are printed there.
 
----
+## Current Limitations
+
+- The LLM provider is currently Claude CLI only.
+- There is no multi-user web authentication.
+- Collaboration is expected to happen through Git, not through a central server.
+- Enterprise Copilot support requires a provider abstraction around the current
+  direct `claude` calls.
 
 ## Credits
 
-- **Pattern**: [Andrej Karpathy](https://github.com/karpathy) — *[LLM Wiki](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f)*.
-- **Ancestor**: [Vannevar Bush, "As We May Think"](https://en.wikipedia.org/wiki/As_We_May_Think), 1945.
-- **Built with**: [Claude Code](https://docs.anthropic.com/en/docs/claude-code).
-
----
-
-<div align="center">
-<br/>
-<sub>MIT License · <a href="README-ko.md">한국어 README</a></sub>
-</div>
+- Pattern: [Andrej Karpathy's LLM Wiki](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f).
+- Ancestor idea: [Vannevar Bush, "As We May Think"](https://en.wikipedia.org/wiki/As_We_May_Think), 1945.
+- Original implementation: Memex / Claude Code based dashboard.
