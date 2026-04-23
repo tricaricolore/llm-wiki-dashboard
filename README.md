@@ -158,6 +158,7 @@ CLAUDE.md                  wiki schema and LLM operating rules
 Environment variables:
 
 ```bash
+LLM_WIKI_PROVIDER=claude
 PORT=8091 python3 dashboard/server.py
 CLAUDE_TIMEOUT=1200 python3 dashboard/server.py
 CLAUDE_QUICK_TIMEOUT=30
@@ -166,6 +167,9 @@ CLAUDE_TOOLS=Edit,Write,Read,Glob,Grep
 
 Project rules live in `CLAUDE.md`. Edit it to change frontmatter rules,
 citation rules, contradiction handling, ingest workflow, and lint behavior.
+
+`claude` is the only implemented provider today. `copilot` is reserved for the
+next integration step after the Copilot CLI command contract is verified.
 
 ## Local-First Notes
 
@@ -225,7 +229,8 @@ process, so API errors are printed there.
 - There is no multi-user web authentication.
 - Collaboration is expected to happen through Git, not through a central server.
 - Enterprise Copilot support requires a provider abstraction around the current
-  direct `claude` calls.
+  CLI calls. The first provider layer is present, but Copilot execution is not
+  implemented yet.
 
 ## Credits
 

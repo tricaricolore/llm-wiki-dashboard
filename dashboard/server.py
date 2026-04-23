@@ -7,11 +7,12 @@ LLM Wiki Dashboard Server
 - 의존성 없음 (Python 3.10+ stdlib only)
 """
 
-import json, os, re, shutil, subprocess, sys, time, threading, urllib.parse
+import json, os, re, subprocess, sys, time, threading, urllib.parse
 from datetime import datetime
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 from provenance import build_provenance_graph
 from index_strategy import get_strategy, get_index_instruction, rebuild_index
+from llm_provider import AVAILABLE_MODELS, create_provider
 from pathlib import Path
 
 PORT = int(os.environ.get("PORT", "8090"))
@@ -19,61 +20,7 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = SCRIPT_DIR.parent
 WIKI_DIR = PROJECT_ROOT / "wiki"
 RAW_DIR = PROJECT_ROOT / "raw"
-
-# subprocess가 claude CLI를 찾을 수 있도록 PATH 보장
-_claude = shutil.which("claude")
-if not _claude:
-    # nvm, homebrew 등 일반적인 경로 추가
-    for p in [os.path.expanduser("~/.nvm/versions/node"), "/usr/local/bin", "/opt/homebrew/bin"]:
-        if os.path.isdir(p):
-            for root, dirs, files in os.walk(p):
-                if "claude" in files:
-                    os.environ["PATH"] = root + ":" + os.environ.get("PATH", "")
-                    _claude = os.path.join(root, "claude")
-                    break
-            if _claude:
-                break
-
-CLAUDE_TOOLS = os.environ.get("CLAUDE_TOOLS", "Edit,Write,Read,Glob,Grep")
-# 환경변수로 조정 가능. 기본 600초(10분) — Ingest는 페이지 10+개 생성 시 오래 걸림.
-CLAUDE_TIMEOUT = int(os.environ.get("CLAUDE_TIMEOUT", "600"))
-# 짧은 진단용 timeout
-CLAUDE_QUICK_TIMEOUT = int(os.environ.get("CLAUDE_QUICK_TIMEOUT", "30"))
-
-# ─── 런타임 설정 (모델 등) ───
-
-SETTINGS_FILE = PROJECT_ROOT / ".dashboard-settings.json"
-
-AVAILABLE_MODELS = [
-    {"id": "claude-opus-4-7", "label": "Opus 4.7", "desc": "최고 품질 (가장 강력)"},
-    {"id": "claude-sonnet-4-6", "label": "Sonnet 4.6", "desc": "균형잡힌 품질/속도"},
-    {"id": "claude-haiku-4-5", "label": "Haiku 4.5", "desc": "빠르고 경제적"},
-    {"id": "default", "label": "Default", "desc": "CLI 기본 모델 사용"},
-]
-
-
-def _load_settings():
-    if SETTINGS_FILE.exists():
-        try:
-            return json.loads(SETTINGS_FILE.read_text("utf-8"))
-        except Exception:
-            pass
-    return {"model": "default"}
-
-
-def _save_settings(s):
-    SETTINGS_FILE.write_text(json.dumps(s, ensure_ascii=False, indent=2), encoding="utf-8")
-
-
-SETTINGS = _load_settings()
-
-
-def _claude_model_args():
-    """현재 설정된 모델을 CLI 인자로 변환"""
-    model = SETTINGS.get("model", "default")
-    if not model or model == "default":
-        return []
-    return ["--model", model]
+LLM = create_provider(PROJECT_ROOT)
 
 RAW_ABS = os.path.abspath(str(RAW_DIR))
 
@@ -281,94 +228,14 @@ def extract_links(body):
     return sorted({m.group(1).strip() + (".md" if not m.group(1).strip().endswith(".md") else "") for m in WIKILINK_RE.finditer(body)})
 
 
-def _timeout_hint():
-    """timeout 발생 시 사용자에게 보여줄 자세한 힌트"""
-    return (
-        f"Claude CLI timeout ({CLAUDE_TIMEOUT}s). 가능한 원인 + 해결:\n"
-        f"  1. Claude CLI 인증 안 됨 → 터미널에서 'claude' 직접 실행해 로그인 확인\n"
-        f"  2. 모델이 너무 무거움 → 헤더 모델 드롭다운에서 Sonnet/Haiku로 전환\n"
-        f"  3. 작업 자체가 큼 → 환경변수 CLAUDE_TIMEOUT=1200 으로 서버 재시작\n"
-        f"  4. /api/claude/diagnose 로 빠른 점검 가능"
-    )
-
-
 def run_claude(prompt, timeout=None):
-    """claude -p 실행 → (ok, output, error)"""
-    t = timeout or CLAUDE_TIMEOUT
-    try:
-        r = subprocess.run(
-            ["claude", "-p", "--allowedTools", CLAUDE_TOOLS] + _claude_model_args() + ["--output-format", "text", prompt],
-            capture_output=True, text=True, timeout=t,
-            cwd=str(PROJECT_ROOT),
-        )
-        err = r.stderr[:500] if r.returncode != 0 else ""
-        return (r.returncode == 0, r.stdout[:4000], err)
-    except subprocess.TimeoutExpired:
-        return (False, "", _timeout_hint())
-    except FileNotFoundError:
-        return (False, "", "claude CLI not found in PATH. Install: npm install -g @anthropic-ai/claude-code")
+    """Run the configured LLM provider."""
+    return LLM.run(prompt, timeout=timeout)
 
 
 def run_claude_tracked(prompt):
-    """claude -p를 stream-json으로 실행하여 Read 호출을 추적.
-    → (ok, answer, error, files_read, token_usage)"""
-    try:
-        r = subprocess.run(
-            ["claude", "-p", "--allowedTools", CLAUDE_TOOLS] + _claude_model_args() +
-            ["--output-format", "stream-json", "--verbose", prompt],
-            capture_output=True, text=True, timeout=CLAUDE_TIMEOUT,
-            cwd=str(PROJECT_ROOT),
-        )
-    except subprocess.TimeoutExpired:
-        return (False, "", _timeout_hint(), [], {})
-    except FileNotFoundError:
-        return (False, "", "claude CLI not found in PATH. Install: npm install -g @anthropic-ai/claude-code", [], {})
-
-    files_read = []
-    answer = ""
-    token_usage = {}
-
-    for line in r.stdout.strip().split("\n"):
-        if not line:
-            continue
-        try:
-            evt = json.loads(line)
-        except json.JSONDecodeError:
-            continue
-
-        # Read tool result → filePath 추출
-        if evt.get("type") == "user":
-            msg = evt.get("message", {})
-            tur = evt.get("tool_use_result")
-            if tur and isinstance(tur, dict):
-                fp = tur.get("file", {}).get("filePath", "")
-                if fp:
-                    # 프로젝트 상대경로로 변환
-                    try:
-                        rel = str(Path(fp).relative_to(PROJECT_ROOT))
-                    except ValueError:
-                        rel = fp
-                    if rel not in files_read:
-                        files_read.append(rel)
-            # content 배열에서도 탐색 (tool_result)
-            content = msg.get("content", [])
-            if isinstance(content, list):
-                for item in content:
-                    if isinstance(item, dict) and item.get("type") == "tool_result":
-                        # 이건 이미 위에서 처리
-                        pass
-
-        # result 이벤트 → answer + usage
-        if evt.get("type") == "result":
-            answer = evt.get("result", "")
-            token_usage = {
-                "input_tokens": evt.get("usage", {}).get("input_tokens", 0),
-                "output_tokens": evt.get("usage", {}).get("output_tokens", 0),
-                "cost_usd": evt.get("total_cost_usd", 0),
-            }
-
-    ok = r.returncode == 0
-    return (ok, answer[:4000], r.stderr[:500] if not ok else "", files_read, token_usage)
+    """Run the configured LLM provider and track files read when supported."""
+    return LLM.run_tracked(prompt)
 
 
 QUERY_LOG = PROJECT_ROOT / "query-log.jsonl"
@@ -572,86 +439,16 @@ def _read_obsidian_facts():
 
 
 def check_status():
-    claude_ok, claude_ver = False, ""
-    try:
-        r = subprocess.run(["claude", "--version"], capture_output=True, text=True, timeout=5)
-        if r.returncode == 0:
-            claude_ok = True
-            claude_ver = r.stdout.strip().split("\n")[0]
-    except Exception:
-        pass
     return {
-        "claude": {"connected": claude_ok, "version": claude_ver},
+        "claude": LLM.status(),
+        "provider": {"id": LLM.id, "name": LLM.display_name},
         "obsidian": _read_obsidian_facts(),
     }
 
 
 def diagnose_claude():
-    """Claude CLI를 빠르게 점검 — 설치, 인증, 모델 응답 시간"""
-    result = {
-        "cli_installed": False,
-        "version": "",
-        "auth_ok": None,
-        "model": SETTINGS.get("model", "default"),
-        "model_args": _claude_model_args(),
-        "quick_test_seconds": None,
-        "quick_test_ok": False,
-        "quick_test_output": "",
-        "error": "",
-        "config_timeout": CLAUDE_TIMEOUT,
-        "advice": [],
-    }
-
-    # 1. 버전 확인
-    try:
-        r = subprocess.run(["claude", "--version"], capture_output=True, text=True, timeout=10)
-        if r.returncode == 0:
-            result["cli_installed"] = True
-            result["version"] = r.stdout.strip().split("\n")[0]
-        else:
-            result["error"] = r.stderr[:200] or "claude --version 실패"
-    except FileNotFoundError:
-        result["error"] = "claude CLI 미설치. npm install -g @anthropic-ai/claude-code"
-        result["advice"].append("Install Claude CLI: npm install -g @anthropic-ai/claude-code")
-        return result
-    except subprocess.TimeoutExpired:
-        result["error"] = "claude --version timeout"
-        return result
-
-    if not result["cli_installed"]:
-        return result
-
-    # 2. 짧은 prompt로 응답 시간 측정 (인증 + 모델 접근 동시 확인)
-    try:
-        t0 = time.time()
-        r = subprocess.run(
-            ["claude", "-p"] + _claude_model_args() + ["--output-format", "text", "Reply with the single word OK."],
-            capture_output=True, text=True, timeout=CLAUDE_QUICK_TIMEOUT,
-            cwd=str(PROJECT_ROOT),
-        )
-        elapsed = time.time() - t0
-        result["quick_test_seconds"] = round(elapsed, 1)
-        result["quick_test_ok"] = r.returncode == 0
-        result["quick_test_output"] = (r.stdout or r.stderr).strip()[:200]
-        result["auth_ok"] = r.returncode == 0
-        if r.returncode != 0:
-            err = (r.stderr or "").lower()
-            if "auth" in err or "login" in err or "unauthorized" in err:
-                result["advice"].append("Claude CLI 인증 필요. 터미널에서 'claude' 실행 후 로그인.")
-            else:
-                result["advice"].append(f"Claude 응답 실패: {(r.stderr or '')[:200]}")
-        if elapsed > 15:
-            result["advice"].append(f"응답이 느립니다 ({elapsed:.1f}s). Sonnet/Haiku로 모델 변경 권장.")
-    except subprocess.TimeoutExpired:
-        result["auth_ok"] = False
-        result["error"] = f"빠른 진단도 timeout ({CLAUDE_QUICK_TIMEOUT}s)"
-        result["advice"].append("Claude CLI가 응답하지 않습니다. 터미널에서 'claude' 직접 실행해 인증/네트워크 확인.")
-
-    # 3. 무거운 모델 사용 시 권장
-    if SETTINGS.get("model") == "claude-opus-4-7":
-        result["advice"].append("Opus 4.7은 가장 느립니다. Ingest처럼 큰 작업은 Sonnet 4.6 권장.")
-
-    return result
+    """Quickly diagnose the configured LLM provider."""
+    return LLM.diagnose()
 
 
 def register_obsidian_vault():
@@ -1444,19 +1241,9 @@ def do_assistant_chat(question, lang="en", history=None):
         role = "User" if h.get("role") == "user" else "Assistant"
         hist_text += f"\n{role}: {h.get('content','')}"
     prompt = f"{ctx}\n\nConversation so far:{hist_text}\n\nUser: {question}\n\nAssistant (short, 2-4 sentences):"
-    # 도우미는 wiki/raw 파일을 읽지 않고 답변 생성만
-    try:
-        r = subprocess.run(
-            ["claude", "-p"] + _claude_model_args() + ["--output-format", "text", prompt],
-            capture_output=True, text=True, timeout=60,
-            cwd=str(PROJECT_ROOT),
-        )
-        ans = r.stdout.strip()
-        return {"ok": r.returncode == 0, "answer": ans[:2000], "error": r.stderr[:300] if r.returncode != 0 else ""}
-    except subprocess.TimeoutExpired:
-        return {"ok": False, "error": "timeout"}
-    except FileNotFoundError:
-        return {"ok": False, "error": "claude CLI not found"}
+    # The helper does not read wiki/raw files; it only answers about dashboard use.
+    ok, ans, err = LLM.run_text(prompt, timeout=60)
+    return {"ok": ok, "answer": ans[:2000], "error": err}
 
 
 # ─── CRUD ───
@@ -1555,7 +1342,11 @@ class Handler(SimpleHTTPRequestHandler):
             if path == "/api/review/list":
                 return self._json(do_review_list())
             if path == "/api/settings":
-                return self._json({"settings": SETTINGS, "models": AVAILABLE_MODELS})
+                return self._json({
+                    "settings": LLM.settings,
+                    "models": AVAILABLE_MODELS,
+                    "provider": {"id": LLM.id, "name": LLM.display_name},
+                })
             if path == "/api/reflect/status":
                 last = get_last_reflect_date()
                 days_ago = None
@@ -1643,9 +1434,10 @@ class Handler(SimpleHTTPRequestHandler):
                 valid = [m["id"] for m in AVAILABLE_MODELS]
                 if model not in valid:
                     return self._json({"ok": False, "error": f"Unknown model: {model}"})
-                SETTINGS["model"] = model
-                _save_settings(SETTINGS)
-                return self._json({"ok": True, "settings": SETTINGS})
+                settings = dict(LLM.settings)
+                settings["model"] = model
+                LLM.save_settings(settings)
+                return self._json({"ok": True, "settings": LLM.settings})
             if path == "/api/index/rebuild":
                 result = rebuild_index(WIKI_DIR)
                 if result["ok"]:
