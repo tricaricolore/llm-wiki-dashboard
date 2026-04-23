@@ -6,17 +6,24 @@ import time
 from pathlib import Path
 
 
-AVAILABLE_MODELS = [
+CLAUDE_MODELS = [
     {"id": "claude-opus-4-7", "label": "Opus 4.7", "desc": "Highest quality"},
     {"id": "claude-sonnet-4-6", "label": "Sonnet 4.6", "desc": "Balanced quality/speed"},
     {"id": "claude-haiku-4-5", "label": "Haiku 4.5", "desc": "Fast and economical"},
     {"id": "default", "label": "Default", "desc": "Use CLI default model"},
 ]
 
+COPILOT_MODELS = [
+    {"id": "default", "label": "Default", "desc": "Use COPILOT_MODEL or CLI default"},
+]
+
+AVAILABLE_MODELS = CLAUDE_MODELS
+
 
 class ClaudeProvider:
     id = "claude"
     display_name = "Claude CLI"
+    models = CLAUDE_MODELS
 
     def __init__(self, project_root: Path):
         self.project_root = Path(project_root)
@@ -227,33 +234,80 @@ class ClaudeProvider:
 class CopilotProvider:
     id = "copilot"
     display_name = "GitHub Copilot CLI"
+    models = COPILOT_MODELS
 
     def __init__(self, project_root: Path):
         self.project_root = Path(project_root)
-        self.settings = {"model": "default"}
+        self.settings = {"model": os.environ.get("COPILOT_MODEL", "default")}
 
     def save_settings(self, settings: dict):
         self.settings = settings
 
+    def model_args(self):
+        model = self.settings.get("model", "default")
+        if not model or model == "default":
+            return []
+        return ["--model", model]
+
+    def command(self, prompt: str):
+        return [
+            "copilot",
+            "-p",
+            prompt,
+            "--allow-all-tools",
+            "--add-dir",
+            str(self.project_root),
+            "--stream",
+            "off",
+        ] + self.model_args()
+
     def run(self, prompt: str, timeout: int | None = None):
-        return (False, "", "Copilot provider is not implemented yet.")
+        try:
+            r = subprocess.run(
+                self.command(prompt),
+                capture_output=True,
+                text=True,
+                timeout=timeout or int(os.environ.get("COPILOT_TIMEOUT", "600")),
+                cwd=str(self.project_root),
+            )
+            err = r.stderr[:500] if r.returncode != 0 else ""
+            return (r.returncode == 0, r.stdout[:4000], err)
+        except subprocess.TimeoutExpired:
+            return (False, "", "Copilot CLI timeout. Try COPILOT_TIMEOUT=1200 or a smaller source.")
+        except FileNotFoundError:
+            return (False, "", "copilot CLI not found in PATH.")
 
     def run_text(self, prompt: str, timeout: int = 60):
-        return (False, "", "Copilot provider is not implemented yet.")
+        ok, out, err = self.run(prompt, timeout=timeout)
+        return (ok, out.strip(), err)
 
     def run_tracked(self, prompt: str):
-        return (False, "", "Copilot provider is not implemented yet.", [], {})
+        ok, out, err = self.run(prompt)
+        return (ok, out, err, [], {})
 
     def status(self):
-        return {"connected": False, "version": "", "error": "Copilot provider is not implemented yet."}
+        try:
+            r = subprocess.run(["copilot", "--version"], capture_output=True, text=True, timeout=10)
+            if r.returncode == 0:
+                return {"connected": True, "version": r.stdout.strip().split("\n")[0]}
+            return {"connected": False, "version": "", "error": r.stderr[:200]}
+        except Exception as exc:
+            return {"connected": False, "version": "", "error": str(exc)}
 
     def diagnose(self):
+        status = self.status()
         return {
-            "cli_installed": False,
+            "cli_installed": status.get("connected", False),
+            "version": status.get("version", ""),
             "auth_ok": None,
-            "quick_test_ok": False,
-            "error": "Copilot provider is not implemented yet.",
-            "advice": ["Keep using the Claude provider until the Copilot CLI command contract is verified."],
+            "model": self.settings.get("model", "default"),
+            "model_args": self.model_args(),
+            "quick_test_ok": None,
+            "error": status.get("error", ""),
+            "advice": [
+                "No prompt was executed by diagnose to avoid consuming model quota.",
+                "Use LLM_WIKI_PROVIDER=copilot and COPILOT_MODEL=<model> to run real ingests.",
+            ],
         }
 
 

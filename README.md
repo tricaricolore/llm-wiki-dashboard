@@ -163,13 +163,16 @@ PORT=8091 python3 dashboard/server.py
 CLAUDE_TIMEOUT=1200 python3 dashboard/server.py
 CLAUDE_QUICK_TIMEOUT=30
 CLAUDE_TOOLS=Edit,Write,Read,Glob,Grep
+COPILOT_MODEL=<model>
+COPILOT_TIMEOUT=1200
 ```
 
 Project rules live in `CLAUDE.md`. Edit it to change frontmatter rules,
 citation rules, contradiction handling, ingest workflow, and lint behavior.
 
-`claude` is the only implemented provider today. `copilot` is reserved for the
-next integration step after the Copilot CLI command contract is verified.
+`claude` is the default provider. `copilot` can be enabled with
+`LLM_WIKI_PROVIDER=copilot`; use `COPILOT_MODEL` to select the Copilot CLI model
+or a local/BYOK model provider.
 
 ## Local-First Notes
 
@@ -225,12 +228,12 @@ process, so API errors are printed there.
 
 ## Current Limitations
 
-- The LLM provider is currently Claude CLI only.
+- The Copilot provider can run non-interactive prompts, but it does not yet
+  provide file-read tracking metrics like the Claude stream-json path.
 - There is no multi-user web authentication.
 - Collaboration is expected to happen through Git, not through a central server.
-- Enterprise Copilot support requires a provider abstraction around the current
-  CLI calls. The first provider layer is present, but Copilot execution is not
-  implemented yet.
+- Enterprise Copilot behavior depends on the local Copilot CLI authentication,
+  policy, and selected `COPILOT_MODEL`.
 
 ## Credits
 

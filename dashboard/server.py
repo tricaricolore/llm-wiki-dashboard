@@ -12,7 +12,7 @@ from datetime import datetime
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 from provenance import build_provenance_graph
 from index_strategy import get_strategy, get_index_instruction, rebuild_index
-from llm_provider import AVAILABLE_MODELS, create_provider
+from llm_provider import create_provider
 from pathlib import Path
 
 PORT = int(os.environ.get("PORT", "8090"))
@@ -1344,7 +1344,7 @@ class Handler(SimpleHTTPRequestHandler):
             if path == "/api/settings":
                 return self._json({
                     "settings": LLM.settings,
-                    "models": AVAILABLE_MODELS,
+                    "models": LLM.models,
                     "provider": {"id": LLM.id, "name": LLM.display_name},
                 })
             if path == "/api/reflect/status":
@@ -1431,7 +1431,7 @@ class Handler(SimpleHTTPRequestHandler):
                 ))
             if path == "/api/settings":
                 model = body.get("model", "default")
-                valid = [m["id"] for m in AVAILABLE_MODELS]
+                valid = [m["id"] for m in LLM.models]
                 if model not in valid:
                     return self._json({"ok": False, "error": f"Unknown model: {model}"})
                 settings = dict(LLM.settings)
