@@ -63,7 +63,7 @@ cd llm-wiki-dashboard
 Run the dashboard directly from this repository:
 
 ```bash
-python dashboard/server.py
+python3 dashboard/server.py
 ```
 
 Open:
@@ -80,9 +80,9 @@ content is kept under `examples/karpathy-demo/`.
 For real use, create a separate vault for each project:
 
 ```bash
-python scripts/init-vault.py ~/llm-wikis/project-alpha-wiki --git
+python3 scripts/init-vault.py ~/llm-wikis/project-alpha-wiki --git
 cd ~/llm-wikis/project-alpha-wiki
-python dashboard/server.py
+python3 dashboard/server.py
 ```
 
 Then open `http://localhost:8090` and open the same folder in Obsidian.
@@ -158,7 +158,8 @@ CLAUDE.md                  wiki schema and LLM operating rules
 Environment variables:
 
 ```bash
-CLAUDE_TIMEOUT=1200 python dashboard/server.py
+PORT=8091 python3 dashboard/server.py
+CLAUDE_TIMEOUT=1200 python3 dashboard/server.py
 CLAUDE_QUICK_TIMEOUT=30
 CLAUDE_TOOLS=Edit,Write,Read,Glob,Grep
 ```
@@ -193,7 +194,7 @@ created with `scripts/init-vault.py` do not include demo sources or pages.
 Increase the timeout for larger ingests:
 
 ```bash
-CLAUDE_TIMEOUT=1800 python dashboard/server.py
+CLAUDE_TIMEOUT=1800 python3 dashboard/server.py
 ```
 
 You can also switch to a faster model from the dashboard header.

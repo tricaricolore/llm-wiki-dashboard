@@ -158,7 +158,7 @@ status: active
 def init_git(target: Path):
     if (target / ".git").exists():
         return
-    subprocess.run(["git", "init"], cwd=target, check=True)
+    subprocess.run(["git", "init", "-b", "main"], cwd=target, check=True)
     subprocess.run(["git", "add", "-A"], cwd=target, check=True)
     subprocess.run(
         ["git", "commit", "-m", "init: llm wiki vault"],
@@ -185,7 +185,7 @@ def main():
         init_git(target)
 
     print(f"Created clean LLM wiki vault: {target}")
-    print("Start it with: python dashboard/server.py")
+    print("Start it with: python3 dashboard/server.py")
 
 
 if __name__ == "__main__":
@@ -194,4 +194,3 @@ if __name__ == "__main__":
     except subprocess.CalledProcessError as exc:
         print(f"Command failed: {' '.join(exc.cmd)}", file=sys.stderr)
         raise SystemExit(exc.returncode)
-

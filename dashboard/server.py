@@ -14,7 +14,7 @@ from provenance import build_provenance_graph
 from index_strategy import get_strategy, get_index_instruction, rebuild_index
 from pathlib import Path
 
-PORT = 8090
+PORT = int(os.environ.get("PORT", "8090"))
 SCRIPT_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = SCRIPT_DIR.parent
 WIKI_DIR = PROJECT_ROOT / "wiki"

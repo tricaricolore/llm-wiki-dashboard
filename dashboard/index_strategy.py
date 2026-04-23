@@ -48,6 +48,17 @@ def _parse_title(text: str, stem: str) -> str:
     return stem.replace("-", " ").title()
 
 
+def _parse_frontmatter_value(text: str, key: str, default: str) -> str:
+    m = FRONTMATTER_RE.match(text)
+    if not m:
+        return default
+    prefix = f"{key}:"
+    for line in m.group(1).split("\n"):
+        if line.strip().startswith(prefix):
+            return line.split(":", 1)[1].strip().strip("'\"")
+    return default
+
+
 def count_wiki_pages(wiki_dir: Path) -> int:
     """시스템 파일 제외한 실제 위키 페이지 수"""
     count = 0
@@ -112,12 +123,11 @@ def build_flat_index(wiki_dir: Path):
     """단일 index.md 생성 (< 50 pages)"""
     by_type = _collect_pages(wiki_dir)
     today = datetime.now().strftime("%Y-%m-%d")
+    index_file = wiki_dir / "index.md"
+    existing = index_file.read_text("utf-8") if index_file.exists() else ""
+    created = _parse_frontmatter_value(existing, "created", today)
 
     sections = []
-    # overview 페이지
-    if (wiki_dir / "overview.md").exists():
-        sections.append("## Overview\n- [[overview]] — wiki scope and current state")
-
     type_order = [
         ("source-summary", "Sources"),
         ("entity", "Entities"),
@@ -127,39 +137,28 @@ def build_flat_index(wiki_dir: Path):
     ]
     for ptype, heading in type_order:
         pages = by_type.get(ptype, [])
-        if not pages:
-            continue
         lines = [f"## {heading}"]
         for fn, title in sorted(pages, key=lambda x: x[1].lower()):
             lines.append(_one_line(title, fn))
         sections.append("\n".join(lines))
 
-    # 미분류
-    known = {t for t, _ in type_order}
-    for ptype, pages in sorted(by_type.items()):
-        if ptype in known:
-            continue
-        lines = [f"## {ptype.title()}"]
-        for fn, title in sorted(pages, key=lambda x: x[1].lower()):
-            lines.append(_one_line(title, fn))
-        sections.append("\n".join(lines))
-
     content = f"""---
-title: Index
+title: "Index"
 type: overview
-created: 2026-04-22
-last_updated: {today}
 tags:
-  - meta
+  - index
+created: {created}
+last_updated: {today}
+source_count: 0
+confidence: high
+status: active
 ---
 
-# Wiki Index
-
-All wiki pages, organized by type. Updated on every ingest.
+# Index
 
 {chr(10).join(sections)}
 """
-    (wiki_dir / "index.md").write_text(content, "utf-8")
+    index_file.write_text(content, "utf-8")
 
 
 def build_hierarchical_index(wiki_dir: Path):

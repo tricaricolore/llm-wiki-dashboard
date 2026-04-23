@@ -167,6 +167,20 @@ Filenames: lowercase, hyphens, no spaces. Examples: `transformer-architecture.md
 Content catalog. Every wiki page gets one entry, sorted alphabetically within each category:
 
 ```markdown
+---
+title: "Index"
+type: overview
+tags:
+  - index
+created: YYYY-MM-DD
+last_updated: YYYY-MM-DD
+source_count: 0
+confidence: high
+status: active
+---
+
+# Index
+
 ## Sources
 - [[source-article-title]] — one-line summary
 
@@ -183,7 +197,19 @@ Content catalog. Every wiki page gets one entry, sorted alphabetically within ea
 - [[scaling-vs-data-quality]] — comparison of scaling approaches
 ```
 
-Update the index on every ingest.
+Index update rules:
+
+- Update `wiki/index.md` on every ingest.
+- Preserve the frontmatter keys exactly as required above.
+- Preserve the fixed headings exactly: `Sources`, `Entities`, `Concepts`, `Techniques`, `Analyses`.
+- Do not add extra top-level categories such as `Overview` unless the schema is explicitly changed.
+- Do not rewrite the whole page when only adding entries.
+- Add each new page to exactly one matching category.
+- Keep entries sorted alphabetically within each category.
+- Keep empty categories present.
+- `source_count` for `wiki/index.md` must remain `0` unless the index itself contains inline source citations.
+- `created` must not change after initialization.
+- Only update `last_updated` when the index body changes.
 
 ### wiki/log.md
 
