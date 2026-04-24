@@ -1,4 +1,4 @@
-# Claude Instructions
+# Agent Instructions
 
 Read and follow `LLM_WIKI.md`.
 

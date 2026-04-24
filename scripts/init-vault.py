@@ -176,7 +176,7 @@ def main():
     for name in ["dashboard", ".obsidian"]:
         copy_path(ROOT / name, target / name)
 
-    for name in ["CLAUDE.md", ".gitignore"]:
+    for name in ["LLM_WIKI.md", "CLAUDE.md", "AGENTS.md", ".gitignore"]:
         copy_path(ROOT / name, target / name)
 
     create_clean_wiki(target)

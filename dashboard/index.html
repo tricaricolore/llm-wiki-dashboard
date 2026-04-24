@@ -461,7 +461,7 @@ main{display:flex;flex-direction:column;overflow:hidden;min-width:0}
   <header>
     <button class="h-side-toggle" onclick="toggleSidebar()" title="Toggle sidebar (Cmd/Ctrl+B)" aria-label="Toggle sidebar">⟷</button>
     <h1><span class="logo-mark"><span>◆</span></span> Karpathy LLM dashboard</h1>
-    <select class="h-model-select" id="modelSelect" onchange="onModelChange()" title="Claude model"></select>
+    <select class="h-model-select" id="modelSelect" onchange="onModelChange()" title="LLM model"></select>
     <div class="hstats" id="hstats"></div>
     <button id="langToggle" class="h-side-toggle" onclick="toggleLang()" title="Language" style="margin-left:4px;font-family:var(--font);font-weight:600">EN</button>
   </header>
@@ -598,7 +598,7 @@ const I18N={
     new_folder:'New Folder', folder_name:'Folder Name', parent:'Parent',
     new_page:'New Page', page_type:'Type',
     delete_confirm_title:'Delete Page',
-    schema_title:'CLAUDE.md', schema_desc:'This file tells Claude how to operate the wiki. Changes apply from next Ingest/Query/Lint.',
+    schema_title:'LLM_WIKI.md', schema_desc:'This file tells the configured LLM provider how to operate the wiki. Changes apply from next Ingest/Query/Lint.',
     last_updated:'Updated',
     type_source:'Source', type_entity:'Entity', type_concept:'Concept',
     type_comparison:'Comparison', type_analysis:'Analysis', type_overview:'Overview',
@@ -607,7 +607,7 @@ const I18N={
     confirm_revert_specific:'Revert "{name}"? Files created by this ingest will be removed and modified files will be restored.',
     revert_fail:'Revert failed: ',
     reflect_sec_pages:'Pages worth creating',
-    reflect_sec_schema:'Rules to add to CLAUDE.md',
+    reflect_sec_schema:'Rules to add to LLM_WIKI.md',
     reflect_sec_sources:'Search terms for underrepresented topics',
     reflect_sec_contradiction:'Patterns of source conflict',
     reflect_sec_nothing:'Nothing found.',
@@ -683,12 +683,12 @@ const I18N={
     new_folder:'새 폴더 만들기', folder_name:'폴더 이름', parent:'상위 폴더',
     new_page:'새 페이지 만들기', page_type:'페이지 타입',
     delete_confirm_title:'페이지 삭제',
-    schema_title:'CLAUDE.md', schema_desc:'이 파일이 Claude에게 위키 운영 방식을 알려주는 설계도입니다. 수정한 내용은 다음 수집·질문·검진부터 반영됩니다.',
+    schema_title:'LLM_WIKI.md', schema_desc:'이 파일이 설정된 LLM provider에게 위키 운영 방식을 알려주는 설계도입니다. 수정한 내용은 다음 수집·질문·검진부터 반영됩니다.',
     wr_tip_suffix:'(최근 쿼리 {n}건 기준)',
     confirm_revert_specific:'"{name}" 수집을 되돌리시겠습니까? 이 수집이 만든 페이지는 삭제되고, 수정한 페이지는 이전 상태로 복원됩니다.',
     revert_fail:'되돌리기 실패: ',
     reflect_sec_pages:'새로 만들면 좋은 페이지',
-    reflect_sec_schema:'CLAUDE.md에 추가할 규칙',
+    reflect_sec_schema:'LLM_WIKI.md에 추가할 규칙',
     reflect_sec_sources:'보강이 필요한 주제의 검색어',
     reflect_sec_contradiction:'소스 간 충돌 패턴',
     reflect_sec_nothing:'발견 사항 없음.',
@@ -2054,16 +2054,16 @@ function showGraph(){
   tick();
 }
 
-// ─── Schema (CLAUDE.md) ───
+// ─── Schema (LLM_WIKI.md) ───
 async function showSchema(){
   setView('schema');cur=null;
-  document.getElementById('bc').innerHTML='<b>CLAUDE.md</b>';
-  document.getElementById('content').innerHTML='<div class="panel"><h2>CLAUDE.md</h2><p class="desc">'+t('guide_loading')+'</p></div>';
+  document.getElementById('bc').innerHTML='<b>LLM_WIKI.md</b>';
+  document.getElementById('content').innerHTML='<div class="panel"><h2>LLM_WIKI.md</h2><p class="desc">'+t('guide_loading')+'</p></div>';
   try{
     var r=await fetch('/api/schema');var d=await r.json();
     var h='<div class="panel">';
     h+='<div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">';
-    h+='<h2 style="margin:0">CLAUDE.md</h2>';
+    h+='<h2 style="margin:0">LLM_WIKI.md</h2>';
     h+='<button class="btn btn-outline" id="schemaToggle" onclick="toggleSchemaEdit()">'+t('btn_edit')+'</button>';
     h+='</div>';
     h+='<p class="desc">'+t('schema_desc')+'</p>';
@@ -2126,7 +2126,7 @@ function buildGuide(lang){
       '## 먼저 알아둘 것','',
       '- `raw/` 는 **불변**입니다. 원본 소스만 들어가고, 4단계 보호로 Claude도 수정할 수 없습니다.',
       '- `wiki/` 는 **Claude가 완전히 소유**합니다. 엔티티, 개념, 소스 요약, 분석 페이지가 자라납니다.',
-      '- `CLAUDE.md` 는 Claude에게 규칙을 알려주는 **스키마**입니다.',
+      '- `LLM_WIKI.md` 는 provider에게 규칙을 알려주는 **스키마**입니다.',
       '- 모든 수집은 **git 커밋**입니다. 언제든 되돌릴 수 있습니다.','',
       '---','',
       '## 상태 표시줄 (좌측 하단)','',
@@ -2158,7 +2158,7 @@ function buildGuide(lang){
       '- **+ 폴더** — 위키 하위 폴더.',
       '- **+ 페이지** — 빈 페이지 (frontmatter 포함).','',
       '### ⋯ 더보기 (More)',
-      '- **CLAUDE.md** — 스키마 확인·편집.',
+      '- **LLM_WIKI.md** — 스키마 확인·편집.',
       '- **가이드** — 이 문서.','',
       '---','',
       '## 사이드바 / 레이아웃','',
@@ -2198,7 +2198,7 @@ function buildGuide(lang){
       '5. `ingest-reports/`에 WHY 보고서가 기록됩니다.',
       '6. git 커밋이 남고, 언제든 되돌릴 수 있습니다.',
       '7. 다음 소스가 들어오면 기존 지식 위에 쌓입니다.','',
-      '모순이 발견되면 CLAUDE.md의 3가지 정책(Historical / Disputed / Superseded) 중 적합한 것이 적용됩니다.','',
+      '모순이 발견되면 LLM_WIKI.md의 3가지 정책(Historical / Disputed / Superseded) 중 적합한 것이 적용됩니다.','',
       '---','',
       '## 팁','',
       '- 한 번에 **하나**의 소스만 수집하세요. 품질이 올라갑니다.',
@@ -2217,7 +2217,7 @@ function buildGuide(lang){
     '## A few things to know first','',
     '- `raw/` is **immutable**. Only original sources live here. Even Claude cannot modify it (4-layer protection).',
     '- `wiki/` is **entirely owned by Claude**. Entity pages, concept pages, source summaries, analyses — they grow here.',
-    '- `CLAUDE.md` is the **schema** that tells Claude the rules.',
+    '- `LLM_WIKI.md` is the **schema** that tells the provider the rules.',
     '- Every ingest is a **git commit**. Anything can be reverted.','',
     '---','',
     '## Status bar (bottom-left)','',
@@ -2249,7 +2249,7 @@ function buildGuide(lang){
     '- **+ Folder** — wiki subfolder.',
     '- **+ Page** — empty page with frontmatter.','',
     '### ⋯ More',
-    '- **CLAUDE.md** — view and edit the schema.',
+    '- **LLM_WIKI.md** — view and edit the schema.',
     '- **Guide** — this document.','',
     '---','',
     '## Sidebar / layout','',
@@ -2289,7 +2289,7 @@ function buildGuide(lang){
     '5. A WHY report goes into `ingest-reports/`.',
     '6. A git commit is made — revertable anytime.',
     '7. The next source compounds on top.','',
-    'When a contradiction is found, one of three policies from CLAUDE.md applies (Historical / Disputed / Superseded).','',
+    'When a contradiction is found, one of three policies from LLM_WIKI.md applies (Historical / Disputed / Superseded).','',
     '---','',
     '## Tips','',
     '- Ingest **one source at a time**. Quality improves.',
@@ -2443,7 +2443,7 @@ var CATEGORIES=[
     {action:'page',icon:'▤',i18n:'nav_new_page'},
   ]},
   {id:'more',icon:'⋯',i18n:'cat_more',items:[
-    {v:'schema',icon:'⚙',label:'CLAUDE.md'},
+    {v:'schema',icon:'⚙',label:'LLM_WIKI.md'},
     {v:'guide',icon:'?',i18n:'nav_guide'},
   ]},
 ];

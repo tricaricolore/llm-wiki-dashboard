@@ -37,9 +37,9 @@ Each project vault is independent:
 - Git.
 - A browser.
 - Obsidian, optional but recommended.
-- Claude Code CLI for the current implementation.
+- Claude Code CLI or GitHub Copilot CLI, depending on the selected provider.
 
-Install Claude Code CLI:
+Install Claude Code CLI for the default provider:
 
 ```bash
 npm install -g @anthropic-ai/claude-code
@@ -49,6 +49,9 @@ claude
 The default provider shells out to `claude -p`. The Copilot provider shells out
 to `copilot -p` and can use GitHub Copilot routing or a local/BYOK provider via
 Copilot CLI environment variables.
+
+Before using Copilot, make sure the `copilot` command works in your terminal
+with your company account.
 
 ## Quick Start
 
@@ -150,7 +153,9 @@ plans/                     planning notes
 dashboard/                 local web app and API server
 scripts/init-vault.py      create a clean vault for another project
 examples/karpathy-demo/    sample raw/wiki/report content
-CLAUDE.md                  wiki schema and LLM operating rules
+LLM_WIKI.md                wiki schema and LLM operating rules
+CLAUDE.md                  Claude wrapper that points to LLM_WIKI.md
+AGENTS.md                  agent wrapper that points to LLM_WIKI.md
 .obsidian/                 Obsidian vault settings
 ```
 
@@ -168,8 +173,10 @@ COPILOT_MODEL=<model>
 COPILOT_TIMEOUT=1200
 ```
 
-Project rules live in `CLAUDE.md`. Edit it to change frontmatter rules,
+Project rules live in `LLM_WIKI.md`. Edit it to change frontmatter rules,
 citation rules, contradiction handling, ingest workflow, and lint behavior.
+`CLAUDE.md` and `AGENTS.md` are thin compatibility wrappers that point agents
+back to the same source of truth.
 
 `claude` is the default provider. `copilot` can be enabled with
 `LLM_WIKI_PROVIDER=copilot`; use `COPILOT_MODEL` to select the Copilot CLI model
@@ -220,6 +227,17 @@ claude
 ```
 
 Complete login/authentication, then restart the dashboard.
+
+### Copilot CLI not connected
+
+Run this in a terminal:
+
+```bash
+copilot
+```
+
+Complete login/authentication with the approved company account, then restart
+the dashboard with `LLM_WIKI_PROVIDER=copilot`.
 
 ### Obsidian vault not registered
 
