@@ -175,6 +175,10 @@ citation rules, contradiction handling, ingest workflow, and lint behavior.
 `LLM_WIKI_PROVIDER=copilot`; use `COPILOT_MODEL` to select the Copilot CLI model
 or a local/BYOK model provider.
 
+For Copilot, `default` means no `--model` flag is passed. Copilot CLI then uses
+its own default/auto model selection. Selecting a specific model in the dashboard
+passes `--model <model-id>` to `copilot -p`.
+
 ## Local-First Notes
 
 - The dashboard runs on `localhost`.

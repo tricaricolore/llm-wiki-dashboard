@@ -14,7 +14,27 @@ CLAUDE_MODELS = [
 ]
 
 COPILOT_MODELS = [
-    {"id": "default", "label": "Default", "desc": "Use COPILOT_MODEL or CLI default"},
+    {"id": "default", "label": "Default / Auto", "desc": "Use COPILOT_MODEL or Copilot CLI default"},
+    {"id": "gpt-4.1", "label": "GPT-4.1", "desc": "Fast, broad coding model"},
+    {"id": "gpt-5-mini", "label": "GPT-5 mini", "desc": "Low-cost GPT-5 family model"},
+    {"id": "gpt-5.2", "label": "GPT-5.2", "desc": "General high-quality model"},
+    {"id": "gpt-5.2-codex", "label": "GPT-5.2-Codex", "desc": "Coding-specialized model"},
+    {"id": "gpt-5.3-codex", "label": "GPT-5.3-Codex", "desc": "Coding-specialized model"},
+    {"id": "gpt-5.4", "label": "GPT-5.4", "desc": "Strongest GPT-5 family model"},
+    {"id": "gpt-5.4-mini", "label": "GPT-5.4 mini", "desc": "Efficient GPT-5.4 family model"},
+    {"id": "claude-haiku-4.5", "label": "Claude Haiku 4.5", "desc": "Fast Anthropic model"},
+    {"id": "claude-sonnet-4", "label": "Claude Sonnet 4", "desc": "Balanced Anthropic model"},
+    {"id": "claude-sonnet-4.5", "label": "Claude Sonnet 4.5", "desc": "Copilot CLI documented default"},
+    {"id": "claude-sonnet-4.6", "label": "Claude Sonnet 4.6", "desc": "Balanced Anthropic model"},
+    {"id": "claude-opus-4.5", "label": "Claude Opus 4.5", "desc": "High-capability Anthropic model"},
+    {"id": "claude-opus-4.6", "label": "Claude Opus 4.6", "desc": "High-capability Anthropic model"},
+    {"id": "claude-opus-4.7", "label": "Claude Opus 4.7", "desc": "High-capability Anthropic model"},
+    {"id": "gemini-2.5-pro", "label": "Gemini 2.5 Pro", "desc": "Google model"},
+    {"id": "gemini-3-flash", "label": "Gemini 3 Flash", "desc": "Fast Google model"},
+    {"id": "gemini-3.1-pro", "label": "Gemini 3.1 Pro", "desc": "Google model"},
+    {"id": "grok-code-fast-1", "label": "Grok Code Fast 1", "desc": "Fast coding model"},
+    {"id": "raptor-mini", "label": "Raptor mini", "desc": "Efficient coding model"},
+    {"id": "goldeneye", "label": "Goldeneye", "desc": "Fine-tuned coding model"},
 ]
 
 AVAILABLE_MODELS = CLAUDE_MODELS
@@ -238,10 +258,33 @@ class CopilotProvider:
 
     def __init__(self, project_root: Path):
         self.project_root = Path(project_root)
-        self.settings = {"model": os.environ.get("COPILOT_MODEL", "default")}
+        self.settings_file = self.project_root / ".dashboard-settings.json"
+        self.settings = {"model": self._load_model()}
+
+    def _load_model(self):
+        if os.environ.get("COPILOT_MODEL"):
+            return os.environ["COPILOT_MODEL"]
+        if self.settings_file.exists():
+            try:
+                settings = json.loads(self.settings_file.read_text("utf-8"))
+                return settings.get("copilot_model", "default")
+            except Exception:
+                pass
+        return "default"
 
     def save_settings(self, settings: dict):
         self.settings = settings
+        existing = {}
+        if self.settings_file.exists():
+            try:
+                existing = json.loads(self.settings_file.read_text("utf-8"))
+            except Exception:
+                existing = {}
+        existing["copilot_model"] = settings.get("model", "default")
+        self.settings_file.write_text(
+            json.dumps(existing, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
 
     def model_args(self):
         model = self.settings.get("model", "default")
