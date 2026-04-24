@@ -148,8 +148,15 @@ class GitManager:
 
     def list_ingests(self, limit=50):
         """ingest: 커밋만 추출 → [{hash, source, date, files_changed}]"""
+        # Hide template/sample ingest history that predates the clean-reset commit.
+        # This keeps History focused on the current project lifecycle.
+        reset = self._run(
+            "rev-list", "-n", "1", "--grep=^chore: reset repository to clean wiki template$", "HEAD"
+        )
+        rev_range = reset.stdout.strip()
+        range_arg = f"{rev_range}..HEAD" if rev_range else "HEAD"
         log = self._run(
-            "log", f"--max-count={limit}", "--format=%H|%s|%aI",
+            "log", range_arg, f"--max-count={limit}", "--format=%H|%s|%aI",
             "--grep=^ingest:", "--extended-regexp",
         )
         results = []
@@ -1193,7 +1200,7 @@ Key facts about the dashboard:
   * Create: + Folder, + Page
   * More: LLM_WIKI.md, Guide
 - Sidebar: drag right edge to resize (220-500px). Cmd/Ctrl+B to toggle. Click folder NAME (not arrow) for continuous folder view.
-- Header: language toggle (EN/한국어), model selector (Opus/Sonnet/Haiku/Default), Wiki Ratio gauge, index strategy badge.
+- Header: language toggle (EN/IT), model selector (Opus/Sonnet/Haiku/Default), Wiki Ratio gauge, index strategy badge.
 - Status bar (bottom-left): raw facts only. Claude CLI (on/off) + Obsidian (process + vault_open).
 - Per-page: Edit, Slides (Marp export), Delete.
 - Every ingest = git commit. Revertable via History.
@@ -1203,29 +1210,29 @@ Key facts about the dashboard:
 Keep answers SHORT (2-4 sentences) and actionable. If the user asks about wiki content, say "That's a wiki question — use the Query feature (toolbar → Work → Query)." in a friendly way.
 """
 
-ASSISTANT_CONTEXT_KO = """당신은 "Claude" 캐릭터로, Karpathy LLM 대시보드의 친근한 도우미입니다.
-당신의 역할은 **대시보드 자체의 기능과 사용법**에 대한 질문에 답변하는 것입니다 — 어디를 클릭하는지, 단축키는 뭔지 등.
+ASSISTANT_CONTEXT_IT = """Sei "Claude", un assistente amichevole del Karpathy LLM Dashboard.
+Il tuo compito e rispondere a domande su COME FUNZIONA LA DASHBOARD: funzionalita, uso pratico, dove cliccare, scorciatoie, ecc.
 
-위키 내용에 관한 질문은 답하지 마세요 (그건 /api/query 담당). 대신 Query 기능을 안내하세요.
+Non rispondere a domande sul contenuto del wiki (quelle passano da /api/query). Reindirizza sempre alla funzione Query.
 
-대시보드 핵심 정보:
-- 패턴: Karpathy의 LLM Wiki — 설정된 LLM provider가 raw/의 원본으로부터 영속 위키를 구축.
-- raw/는 불변(4단계 보호). wiki/는 LLM provider 소유. LLM_WIKI.md는 스키마.
-- 툴바는 5개 카테고리:
-  * 작업: 수집, 질문, 작성, 비교
-  * 분석: 검진, 성찰, 복습, 출처
-  * 탐색: 검색, 그래프, 이력
-  * 만들기: + 폴더, + 페이지
-  * 더보기: LLM_WIKI.md, 가이드
-- 사이드바: 우측 경계 드래그로 리사이즈(220-500px). Cmd/Ctrl+B로 토글. 폴더 **이름** 클릭(화살표 아님) → 연속 폴더 뷰.
-- 헤더: 언어 토글(EN/한국어), 모델 선택(Opus/Sonnet/Haiku/Default), Wiki Ratio 게이지, 인덱스 배지.
-- 상태 바(좌측 하단): raw facts만. Claude CLI + Obsidian(process + vault_open).
-- 페이지별: 편집, Slides(Marp 내보내기), 삭제.
-- 모든 수집 = git 커밋. 이력에서 되돌리기 가능.
-- 인라인 인용 [^src-*]는 숫자 배지로 렌더링.
-- 적응형 인덱싱: flat(<50) → hierarchical(50-200) → indexed(>200).
+Fatti chiave sulla dashboard:
+- Pattern: Karpathy's LLM Wiki — il provider LLM configurato costruisce un wiki persistente dalle fonti in raw/.
+- raw/ e immutabile (protezione a 4 livelli). wiki/ e gestito dal provider LLM. LLM_WIKI.md e lo schema.
+- Toolbar con 5 categorie:
+  * Work: Ingest, Query, Write, Compare
+  * Analyze: Lint, Reflect, Review, Provenance
+  * Browse: Search, Graph, History
+  * Create: + Folder, + Page
+  * More: LLM_WIKI.md, Guide
+- Sidebar: trascina il bordo destro per ridimensionare (220-500px). Cmd/Ctrl+B per mostrare/nascondere. Clicca il NOME cartella (non la freccia) per vista continua.
+- Header: toggle lingua (EN/IT), selettore modello (Opus/Sonnet/Haiku/Default), indicatore Wiki Ratio, badge strategia indice.
+- Status bar (in basso a sinistra): solo fatti raw. Claude CLI (on/off) + Obsidian (process + vault_open).
+- Per pagina: Edit, Slides (export Marp), Delete.
+- Ogni ingest = commit git. Ripristinabile da History.
+- Citazioni inline [^src-*] renderizzate come badge numerati.
+- Indicizzazione adattiva: flat (<50) → hierarchical (50-200) → indexed (>200).
 
-답변은 **짧게(2~4문장)**, 행동 중심으로. 사용자가 위키 내용을 물으면 "그건 위키 질문이에요 — Query 기능(툴바 → 작업 → 질문)을 사용해 보세요." 라고 친근하게 안내.
+Rispondi in modo breve (2-4 frasi) e operativo. Se l'utente chiede contenuti wiki, rispondi: "Questa e una domanda sul wiki: usa Query (toolbar → Work → Query)."
 """
 
 
@@ -1235,7 +1242,7 @@ def do_assistant_chat(question, lang="en", history=None):
         return {"ok": False, "error": "Empty question"}
     history = history or []
     # 간단한 대화 형식
-    ctx = ASSISTANT_CONTEXT_KO if lang == "ko" else ASSISTANT_CONTEXT_EN
+    ctx = ASSISTANT_CONTEXT_IT if lang == "it" else ASSISTANT_CONTEXT_EN
     hist_text = ""
     for h in history[-4:]:
         role = "User" if h.get("role") == "user" else "Assistant"

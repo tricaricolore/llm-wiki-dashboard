@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -463,7 +463,7 @@ main{display:flex;flex-direction:column;overflow:hidden;min-width:0}
     <h1><span class="logo-mark"><span>◆</span></span> Karpathy LLM dashboard</h1>
     <select class="h-model-select" id="modelSelect" onchange="onModelChange()" title="LLM model"></select>
     <div class="hstats" id="hstats"></div>
-    <button id="langToggle" class="h-side-toggle" onclick="toggleLang()" title="Language" style="margin-left:4px;font-family:var(--font);font-weight:600">EN</button>
+    <button id="langToggle" class="h-side-toggle" onclick="toggleLang()" title="Language" style="margin-left:4px;font-family:var(--font);font-weight:600">IT</button>
   </header>
   <aside class="side">
     <input type="text" id="q" data-i18n-ph="search_placeholder" placeholder="Search pages...">
@@ -617,7 +617,7 @@ const I18N={
     graph_title:'Knowledge Graph · click a node to open',
     ingest_result_created:'created', ingest_result_modified:'modified',
   },
-  ko:{
+  _legacy_ko_removed:{
     search_placeholder:'페이지 검색...',
     tab_tree:'트리', tab_pages:'페이지', tab_log:'로그',
     status_claude:'LLM Provider',
@@ -704,6 +704,69 @@ const I18N={
   },
 };
 let LANG=localStorage.getItem('karpathy-lang')||'en';
+if(LANG!=='en'&&LANG!=='it')LANG='en';
+I18N.it=Object.assign({},I18N.en,{
+  search_placeholder:'Cerca pagine...',
+  tab_tree:'Albero', tab_pages:'Pagine', tab_log:'Log',
+  nav_ingest:'+ Importa', nav_query:'Domanda', nav_lint:'Lint',
+  nav_reflect:'Riflessione', nav_write:'Scrivi', nav_compare:'Confronta',
+  nav_review:'Revisione', nav_search:'Cerca', nav_graph:'Grafo',
+  nav_history:'Cronologia', nav_provenance:'Provenienza',
+  nav_folder:'+ Cartella', nav_new_page:'+ Pagina', nav_guide:'? Guida',
+  ingest_title:'Importa Nuova Fonte',
+  ingest_desc:'Incolla il contenuto: la fonte resta in raw/ e il provider LLM aggiorna il wiki.',
+  field_title:'Titolo', field_content:'Contenuto (Markdown)', field_folder:'Cartella destinazione',
+  ingest_btn:'Importa con Claude', ingest_processing:'Claude sta importando...',
+  ingest_done:'Importazione completata',
+  query_title:'Fai una domanda al wiki',
+  query_desc:'Claude cerca nelle pagine wiki pertinenti e risponde con citazioni.',
+  field_question:'Domanda', query_btn:'Chiedi a Claude', query_processing:'Ricerca pagine correlate...',
+  query_save_to_wiki:'Salva risposta nel wiki', query_save_placeholder:'Titolo pagina (es. Analisi Self-Attention)',
+  lint_title:'Controllo Salute Wiki', lint_desc:'Verifica contraddizioni, pagine orfane, citazioni mancanti e copertura.',
+  lint_btn:'Esegui lint', lint_fix_btn:'Applica fix suggeriti',
+  reflect_title:'Riflessione Wiki', reflect_desc:'Analizza ingest/log/query recenti e propone miglioramenti.',
+  reflect_window:'Finestra analisi', reflect_win_10:'Ultimi 10 ingest', reflect_win_week:'Ultima settimana', reflect_win_all:'Tutto',
+  reflect_btn:'Esegui riflessione', reflect_processing:'Claude sta analizzando il wiki... (1-3 min)',
+  write_title:'Assistente di Scrittura', write_desc:'Bozza di articolo basata sul wiki con citazioni automatiche.',
+  write_topic:'Argomento', write_topic_ph:'es. Perche self-attention ha sostituito RNN',
+  write_length:'Lunghezza', write_short:'Breve (~300 parole)', write_medium:'Media (~700 parole)', write_long:'Lunga (~1500 parole)',
+  write_style:'Stile', write_style_blog:'Post blog', write_style_paper:'Accademico', write_style_explainer:'Spiegazione',
+  write_btn:'Genera bozza con Claude', write_processing:'Claude sta scrivendo... (1-2 min)',
+  compare_title:'Confronto Pagine', compare_desc:'Seleziona due pagine per similitudini, differenze e implicazioni.',
+  compare_a:'Pagina A', compare_b:'Pagina B', compare_btn:'Confronta', compare_processing:'Claude sta confrontando... (~1 min)',
+  review_title:'Revisione Spaziata', review_desc:'Pagine attive non aggiornate da oltre 30 giorni.',
+  review_empty:'Tutte le pagine sono aggiornate (<30 giorni).', review_refresh:'Aggiorna con Claude',
+  search_title:'Ricerca Smart', search_desc:'Ricerca full-text TF-IDF su tutte le pagine wiki.', search_ph:'Inserisci parole chiave...',
+  search_btn:'Cerca', search_no_results:'Nessuna pagina trovata.',
+  history_title:'Cronologia Ingest', history_desc:'Ogni ingest crea un commit git. Puoi fare revert mirato.',
+  provenance_title:'Provenienza Citazioni', provenance_desc:'Rapporto frasi con citazioni inline per pagina.',
+  guide_title:'Guida Uso', guide_loading:'Caricamento...',
+  btn_edit:'Modifica', btn_delete:'Elimina', btn_save:'Salva', btn_cancel:'Annulla',
+  btn_approve:'Approva', btn_revert:'Ripristina', btn_preview:'Anteprima', btn_fix:'Correggi', btn_create:'Crea',
+  err_title_required:'Il titolo e obbligatorio.', err_content_required:'Il contenuto e obbligatorio.', err_network:'Errore di rete: ',
+  confirm_revert:'Ripristino: annullera le modifiche di questo ingest.', confirm_delete:'Eliminare questa pagina? Azione irreversibile.',
+  save_success:'Salvato', save_fail:'Salvataggio fallito: ',
+  page_count:'pagine', source_count:'fonti', link_count:'link',
+  wiki_ratio_high:'Il wiki e la fonte principale di conoscenza.',
+  wiki_ratio_mid:'Uso misto wiki/raw: valuta piu ingest.',
+  wiki_ratio_low:'Il wiki non sostituisce ancora bene raw: controlla la qualita ingest.',
+  files_read_summary:'Questa risposta ha letto', wiki_files:'file wiki', raw_files:'file raw',
+  show_files:'lista file', reasoning:'Motivazione:', created:'Creato', modified:'Modificato',
+  new_folder:'Nuova Cartella', folder_name:'Nome Cartella', parent:'Padre',
+  new_page:'Nuova Pagina', page_type:'Tipo', delete_confirm_title:'Elimina Pagina',
+  schema_desc:'Questo file definisce le regole operative del provider LLM per il wiki.',
+  wr_tip_suffix:'(ultime {n} query)', confirm_revert_specific:'Ripristinare \"{name}\"? Le nuove pagine verranno rimosse e i file modificati ripristinati.',
+  revert_fail:'Ripristino fallito: ', reflect_sec_pages:'Pagine da creare', reflect_sec_schema:'Regole da aggiungere a LLM_WIKI.md',
+  reflect_sec_sources:'Termini di ricerca per temi scoperti', reflect_sec_contradiction:'Pattern di conflitto tra fonti',
+  reflect_sec_nothing:'Nessun elemento trovato.', suggest_processing:'Claude sta generando suggerimenti...',
+  suggest_none:'Nessun suggerimento. Copertura wiki buona.', fix_citation_processing:'Claude sta aggiungendo citazioni: ',
+  graph_title:'Knowledge Graph · clicca un nodo per aprire',
+  ingest_result_created:'creato', ingest_result_modified:'modificato',
+  last_updated:'Aggiornato',
+  type_source:'Fonte', type_entity:'Entita', type_concept:'Concetto',
+  type_comparison:'Confronto', type_analysis:'Analisi', type_overview:'Panoramica',
+  cat_work:'Lavoro', cat_analyze:'Analizza', cat_browse:'Esplora', cat_create:'Crea', cat_more:'Altro'
+});
 function t(k){return (I18N[LANG]&&I18N[LANG][k])||(I18N.en[k])||k;}
 function applyI18n(){
   document.documentElement.setAttribute('lang',LANG);
@@ -713,10 +776,10 @@ function applyI18n(){
   document.querySelectorAll('[data-i18n-ph]').forEach(function(el){
     var k=el.getAttribute('data-i18n-ph'); var v=t(k); if(v)el.setAttribute('placeholder',v);
   });
-  var btn=document.getElementById('langToggle'); if(btn)btn.textContent=LANG==='en'?'한국어':'EN';
+  var btn=document.getElementById('langToggle'); if(btn)btn.textContent=LANG==='en'?'IT':'EN';
 }
 function toggleLang(){
-  LANG=LANG==='en'?'ko':'en';localStorage.setItem('karpathy-lang',LANG);
+  LANG=LANG==='en'?'it':'en';localStorage.setItem('karpathy-lang',LANG);
   applyI18n();renderToolbar();
   if(curFolder)showFolderView(curFolder);
   else if(cur)showPage(cur);
@@ -937,7 +1000,7 @@ function showBubbleHint(){
   var char=document.getElementById('claudeChar');
   if(!char)return;
   var rect=char.getBoundingClientRect();
-  bubble.textContent=LANG==='ko'?'기능이 궁금하면 클릭!':'Click me to ask!';
+  bubble.textContent=LANG==='it'?'Clicca per chiedermi una funzione!':'Click me to ask!';
   bubble.style.left=(rect.left-40)+'px';
   bubble.style.top=(rect.top-44)+'px';
   bubble.classList.add('show');
@@ -985,24 +1048,24 @@ function toggleChat(){
 }
 
 function updateChatLabels(){
-  var isKo=LANG==='ko';
-  document.getElementById('chTitle').textContent=isKo?'대시보드 도우미':'Dashboard Assistant';
-  document.getElementById('chSubtitle').textContent=isKo?'대시보드 기능에 대해 물어보세요':'Ask about dashboard features';
-  document.getElementById('chatInput').placeholder=isKo?'질문을 입력하세요...':'Ask a question...';
-  document.getElementById('chatSend').textContent=isKo?'전송':'Send';
+  var isIt=LANG==='it';
+  document.getElementById('chTitle').textContent=isIt?'Assistente Dashboard':'Dashboard Assistant';
+  document.getElementById('chSubtitle').textContent=isIt?'Chiedi come funziona la dashboard':'Ask about dashboard features';
+  document.getElementById('chatInput').placeholder=isIt?'Scrivi una domanda...':'Ask a question...';
+  document.getElementById('chatSend').textContent=isIt?'Invia':'Send';
 }
 
 function renderChatWelcome(){
-  var isKo=LANG==='ko';
-  var greeting=isKo
-    ? '안녕하세요! 이 대시보드의 기능에 대해 무엇이든 물어보세요. 예를 들면:'
+  var isIt=LANG==='it';
+  var greeting=isIt
+    ? 'Ciao! Chiedimi pure come funziona questa dashboard. Per esempio:'
     : "Hi! Ask me anything about how this dashboard works. For example:";
   addChatMsg('bot',greeting);
-  var suggestions=isKo?[
-    '사이드바 어떻게 닫아?',
-    'Ingest랑 Query 차이는?',
-    '폴더 뷰는 뭐야?',
-    '모델은 어디서 바꿔?',
+  var suggestions=isIt?[
+    'Come chiudo la sidebar?',
+    'Che differenza c e tra Ingest e Query?',
+    'Cos e la vista cartella?',
+    'Dove cambio modello?',
   ]:[
     'How do I close the sidebar?',
     'What\'s the difference between Ingest and Query?',
@@ -1048,7 +1111,7 @@ async function sendChat(){
   chatHistory.push({role:'user',content:q});
   var sendBtn=document.getElementById('chatSend');
   sendBtn.disabled=true;
-  var typing=addChatMsg('typing',LANG==='ko'?'생각 중':'thinking');
+  var typing=addChatMsg('typing',LANG==='it'?'Sto pensando':'thinking');
   try{
     var r=await fetch('/api/assistant',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:q,lang:LANG,history:chatHistory.slice(-6)})});
     var d=await r.json();
@@ -1057,11 +1120,11 @@ async function sendChat(){
       addChatMsg('bot',d.answer);
       chatHistory.push({role:'assistant',content:d.answer});
     }else{
-      addChatMsg('bot',(LANG==='ko'?'오류: ':'Error: ')+(d.error||'unknown'));
+      addChatMsg('bot',(LANG==='it'?'Errore: ':'Error: ')+(d.error||'unknown'));
     }
   }catch(e){
     typing.remove();
-    addChatMsg('bot',(LANG==='ko'?'네트워크 오류: ':'Network error: ')+e.message);
+    addChatMsg('bot',(LANG==='it'?'Errore di rete: ':'Network error: ')+e.message);
   }
   sendBtn.disabled=false;
   input.focus();
@@ -1080,23 +1143,23 @@ async function checkStatus(){
     var registerBtn='';
     if(!o.process_running){
       label='off';
-      tip=LANG==='ko'?'Obsidian 프로세스가 실행되지 않음':'Obsidian process not running';
+      tip=LANG==='it'?'Processo Obsidian non in esecuzione':'Obsidian process not running';
     }else if(!o.config_path){
       label='on · config not found';
-      tip=LANG==='ko'?'Obsidian 실행 중이지만 config 파일이 없음. 한 번이라도 Obsidian을 실행하세요.':'Obsidian is running but config file not found. Run Obsidian at least once.';
+      tip=LANG==='it'?'Obsidian in esecuzione ma file config non trovato. Apri Obsidian almeno una volta.':'Obsidian is running but config file not found. Run Obsidian at least once.';
     }else if(!o.vault_registered){
       label='on · vault not registered';
       var registered=(o.registered_vaults||[]).join(' | ')||'(none)';
-      tip=LANG==='ko'
-        ?'이 폴더가 Obsidian에 vault로 등록되지 않음.\n프로젝트 경로: '+(o.project_path||'?')+'\n등록된 vault: '+registered+'\n\n아래 "Register" 버튼을 누르면 자동 등록됩니다.'
+      tip=LANG==='it'
+        ?'Questa cartella non e registrata come vault in Obsidian.\nProgetto: '+(o.project_path||'?')+'\nVault registrati: '+registered+'\n\nPremi "Register" per registrarla automaticamente.'
         :'This folder is not registered as a vault in Obsidian.\nProject: '+(o.project_path||'?')+'\nRegistered: '+registered+'\n\nClick "Register" below to add it automatically.';
       registerBtn=' <button class="status-action" onclick="registerObsidianVault(event)">Register</button>';
     }else{
       label='on · vault_open=' + (o.vault_open?'true':'false');
       if(!o.vault_open){
-        tip=LANG==='ko'?'등록되어 있지만 현재 열려있지 않음. Obsidian에서 vault 전환.':'Registered but not currently open. Switch vault in Obsidian.';
+        tip=LANG==='it'?'Registrato ma non aperto al momento. Cambia vault in Obsidian.':'Registered but not currently open. Switch vault in Obsidian.';
       }else{
-        tip=LANG==='ko'?'연결 정상':'Connected';
+        tip=LANG==='it'?'Connesso':'Connected';
       }
     }
     var connected=!!(o.process_running && o.vault_registered && o.vault_open);
@@ -1133,26 +1196,26 @@ async function registerObsidianVault(ev){
     var text=await r.text();
     var d;
     try{d=JSON.parse(text);}catch(e){
-      toast((LANG==='ko'?'서버 응답 파싱 실패: ':'Bad server response: ')+text.substring(0,150),'err');
+      toast((LANG==='it'?'Parsing risposta server fallito: ':'Bad server response: ')+text.substring(0,150),'err');
       console.error('register response not JSON:',text);
       if(btn){btn.disabled=false;btn.textContent='Register';}
       return;
     }
     if(d.ok){
       var msg=d.action==='already_registered'
-        ?(LANG==='ko'?'이미 등록되어 있음 — open 플래그 활성화':'Already registered — opened')
-        :(LANG==='ko'?'등록 완료! Obsidian 재시작하면 vault 목록에 나타납니다.':'Registered! Restart Obsidian to see it.');
+        ?(LANG==='it'?'Gia registrato — flag open attivato':'Already registered — opened')
+        :(LANG==='it'?'Registrato. Riavvia Obsidian per vederlo nella lista vault.':'Registered! Restart Obsidian to see it.');
       toast(msg+' ('+d.config_path+')','ok');
       setTimeout(checkStatus,500);
     }else{
       // 서버 에러 발생 시 자세한 정보 표시
       var errMsg=d.error||'unknown';
       if(d.endpoint)errMsg+=' [endpoint='+d.endpoint+']';
-      toast((LANG==='ko'?'등록 실패: ':'Register failed: ')+errMsg,'err');
+      toast((LANG==='it'?'Registrazione fallita: ':'Register failed: ')+errMsg,'err');
       console.error('register failed:',d);
     }
   }catch(e){
-    toast((LANG==='ko'?'네트워크 오류: ':'Network error: ')+e.message,'err');
+    toast((LANG==='it'?'Errore di rete: ':'Network error: ')+e.message,'err');
     console.error('register network error:',e);
   }
   if(btn){btn.disabled=false;btn.textContent='Register';}
@@ -1408,7 +1471,7 @@ async function doIngest(){
   function fmt(s){var m=Math.floor(s/60),sec=Math.floor(s%60);return m+':'+(sec<10?'0':'')+sec;}
   function update(){
     var s=(Date.now()-t0)/1000;
-    var msg=t('ingest_processing')+' '+fmt(s)+(LANG==='ko'?'  · 큰 소스는 5~10분 걸릴 수 있어요':'  · large sources can take 5-10 min');
+    var msg=t('ingest_processing')+' '+fmt(s)+(LANG==='it'?'  · le fonti grandi possono richiedere 5-10 min':'  · large sources can take 5-10 min');
     res.textContent=msg;
   }
   update();
@@ -1426,7 +1489,7 @@ async function doIngest(){
       var html='<div style="white-space:pre-wrap">'+esc(errText)+'</div>';
       // timeout 또는 연결 문제일 때 진단 버튼 추가
       if(errText.toLowerCase().indexOf('timeout')>=0||errText.toLowerCase().indexOf('not found')>=0){
-        html+='<div style="margin-top:12px"><button class="btn btn-outline" onclick="runClaudeDiagnose()">'+(LANG==='ko'?'LLM Provider 진단 실행':'Run LLM provider diagnostic')+'</button></div>';
+        html+='<div style="margin-top:12px"><button class="btn btn-outline" onclick="runClaudeDiagnose()">'+(LANG==='it'?'Esegui diagnostica LLM Provider':'Run LLM provider diagnostic')+'</button></div>';
       }
       if(d.claude_output)html+='<div style="margin-top:8px;font-size:11px;opacity:.7">'+esc(d.claude_output)+'</div>';
       res.className='result-box err';
@@ -1441,7 +1504,7 @@ async function doIngest(){
 }
 
 async function runClaudeDiagnose(){
-  toast(LANG==='ko'?'LLM Provider 점검 중...':'Diagnosing LLM provider...','info');
+  toast(LANG==='it'?'Diagnostica LLM Provider in corso...':'Diagnosing LLM provider...','info');
   try{
     var r=await fetch('/api/provider/diagnose');var d=await r.json();
     var lines=[];
@@ -1453,10 +1516,10 @@ async function runClaudeDiagnose(){
       if(d.quick_test_output)lines.push('  → '+d.quick_test_output);
     }
     if(d.error)lines.push('Error: '+d.error);
-    if(d.advice&&d.advice.length){lines.push('');lines.push((LANG==='ko'?'권장사항:':'Advice:'));d.advice.forEach(function(a){lines.push('  • '+a);});}
+    if(d.advice&&d.advice.length){lines.push('');lines.push((LANG==='it'?'Consigli:':'Advice:'));d.advice.forEach(function(a){lines.push('  • '+a);});}
     var res=document.getElementById('ingestResult');
     if(res){res.className='result-box info';res.innerHTML='<div style="white-space:pre-wrap;font-family:var(--mono)">'+esc(lines.join('\n'))+'</div>';}
-  }catch(e){toast((LANG==='ko'?'진단 실패: ':'Diagnose failed: ')+e.message,'err');}
+  }catch(e){toast((LANG==='it'?'Diagnostica fallita: ':'Diagnose failed: ')+e.message,'err');}
 }
 
 function showIngestResult(d){
@@ -2116,96 +2179,68 @@ async function saveSchema(){
 function buildGuide(lang){
   var BT=String.fromCharCode(96);
   var FENCE=BT+BT+BT;
-  if(lang==='ko'){
+  if(lang==='it'){
     return [
-      '# Karpathy LLM 대시보드','',
-      '> 스스로 쓰이는 개인 지식 베이스.',
-      '> Obsidian에서 읽고, Claude Code가 쓰고, 대시보드로 제어합니다.','',
-      '원본: [Karpathy LLM Wiki 패턴](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f)','',
+      '# Dashboard Karpathy LLM','',
+      '> Una base di conoscenza personale che si aggiorna da sola.',
+      '> La leggi in Obsidian, la aggiorna Claude Code, la controlli da questa dashboard.','',
+      'Fonte: [Karpathy LLM Wiki pattern](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f)','',
       '---','',
-      '## 먼저 알아둘 것','',
-      '- `raw/` 는 **불변**입니다. 원본 소스만 들어가고, 4단계 보호로 Claude도 수정할 수 없습니다.',
-      '- `wiki/` 는 **Claude가 완전히 소유**합니다. 엔티티, 개념, 소스 요약, 분석 페이지가 자라납니다.',
-      '- `LLM_WIKI.md` 는 provider에게 규칙을 알려주는 **스키마**입니다.',
-      '- 모든 수집은 **git 커밋**입니다. 언제든 되돌릴 수 있습니다.','',
+      '## Cose importanti','',
+      '- `raw/` e **immutabile**.',
+      '- `wiki/` e gestito dal provider LLM.',
+      '- `LLM_WIKI.md` definisce le regole operative.',
+      '- Ogni ingest crea un commit git, quindi e ripristinabile.','',
       '---','',
-      '## 상태 표시줄 (좌측 하단)','',
-      '| 표시 | 뜻 |',
+      '## Barra stato (in basso a sinistra)','',
+      '| Indicatore | Significato |',
       '|------|-----|',
-      '| 🟢 **Claude CLI** | claude 명령 설치·인증 완료 |',
-      '| 🔴 **Claude CLI** | 터미널에서 `claude` 실행 확인 필요 |',
-      '| 🟢 **Obsidian** | 프로세스 실행 중 + 이 vault가 열려있음 |',
-      '| 🔴 **Obsidian** | 프로세스 꺼짐 또는 vault 닫힘 |','',
-      '좌측 하단의 값은 모두 **실제 사실(raw fact)**만 표시합니다 — 추측이나 캐시된 값 없음.','',
+      '| 🟢 **Claude CLI** | comando installato e autenticato |',
+      '| 🔴 **Claude CLI** | verifica `claude` da terminale |',
+      '| 🟢 **Obsidian** | processo attivo e vault aperto |',
+      '| 🔴 **Obsidian** | processo fermo o vault chiuso |','',
       '---','',
-      '## 툴바 카테고리','',
-      '13개 기능이 5개 그룹으로 묶여 있습니다. 현재 보고 있는 뷰가 속한 카테고리는 상단에 강조선으로 표시됩니다.','',
-      '### ▶ 작업 (Work)',
-      '- **수집(Ingest)** — 문서를 붙여넣으면 Claude가 위키 페이지를 만듭니다. diff + 판단 근거 + 되돌리기 포함.',
-      '- **질문(Query)** — 위키에 질문. 읽은 파일과 Wiki Ratio가 함께 표시됩니다.',
-      '- **작성(Write)** — 위키 기반 에세이 초안. 인용 자동 삽입. 주제·분량·스타일 선택.',
-      '- **비교(Compare)** — 두 페이지를 선택해 공통점·차이점·시사점 분석.','',
-      '### ◉ 분석 (Analyze)',
-      '- **검진(Lint)** — 16개 항목 체크. 자동 수정 버튼.',
-      '- **성찰(Reflect)** — 주간 메타 분석. 새 페이지 제안, 스키마 개선, 부족한 소스.',
-      '- **복습(Review)** — 30일 이상 갱신 안 된 페이지를 최신 관점으로 갱신.',
-      '- **출처(Provenance)** — 페이지별 인용 커버리지. 부족한 곳 보완.','',
-      '### ◎ 탐색 (Browse)',
-      '- **검색(Search)** — TF-IDF 전문 검색.',
-      '- **그래프(Graph)** — 지식 그래프. 드래그, 클릭 이동.',
-      '- **이력(History)** — git 기반 수집 이력. 원클릭 되돌리기.','',
-      '### ＋ 만들기 (Create)',
-      '- **+ 폴더** — 위키 하위 폴더.',
-      '- **+ 페이지** — 빈 페이지 (frontmatter 포함).','',
-      '### ⋯ 더보기 (More)',
-      '- **LLM_WIKI.md** — 스키마 확인·편집.',
-      '- **가이드** — 이 문서.','',
+      '## Categorie toolbar','',
+      '### Work: Ingest, Query, Write, Compare',
+      '### Analyze: Lint, Reflect, Review, Provenance',
+      '### Browse: Search, Graph, History',
+      '### Create: + Folder, + Page',
+      '### More: LLM_WIKI.md, Guide','',
       '---','',
-      '## 사이드바 / 레이아웃','',
-      '- **리사이즈** — 사이드바 우측 경계를 드래그해 220–500px 사이에서 조절.',
-      '- **접기** — 헤더 `⟷` 버튼 또는 **Cmd/Ctrl + B**.',
-      '- **폴더 연속 뷰** — 트리에서 폴더 **이름** 클릭 → 하위 페이지를 한 화면에 이어서 읽기. 우측에 스크롤 네비게이터.',
-      '- **화살표 클릭** — 펼치기/접기만 (페이지 이동 아님).','',
+      '## Sidebar e layout','',
+      '- Ridimensiona la sidebar da 220 a 500px.',
+      '- Usa `⟷` o **Cmd/Ctrl + B** per apri/chiudi.',
+      '- Clic sul nome cartella per vista continua delle pagine.','',
       '---','',
-      '## 헤더 지표','',
-      '- **라이브 점** — 대시보드가 활성 상태임을 표시.',
-      '- **pages / sources / links** — 위키 통계.',
-      '- **Wiki Ratio** — 최근 쿼리에서 Claude가 wiki를 얼마나 참고했는지. 0.4 미만 = 위키가 raw를 대체하지 못하는 상태.',
-      '- **인덱스 배지** — `flat` / `hierarchical` / `indexed` (자동 전환).',
-      '- **모델 드롭다운** — Claude 모델 선택 (Opus 4.7 / Sonnet 4.6 / Haiku 4.5 / Default).',
-      '- **EN / 한국어 토글** — UI 언어.','',
+      '## Indicatori header','',
+      '- **Live dot**: dashboard attiva.',
+      '- **pages / sources / links**: statistiche wiki.',
+      '- **Wiki Ratio**: uso wiki vs raw nelle query recenti.',
+      '- **EN / IT toggle**: lingua UI.','',
       '---','',
-      '## 페이지별 액션','',
-      '각 위키 페이지 우측 상단에:',
-      '- **편집** — 인라인 마크다운 에디터',
-      '- **Slides** — Marp 슬라이드 덱으로 내보내기 (.md 다운로드)',
-      '- **삭제** — 시스템 페이지가 아닌 경우에만','',
+      '## Azioni per pagina','',
+      '- **Edit**, **Slides**, **Delete** (solo pagine non di sistema).','',
       '---','',
-      '## CLI에서도 가능','',
+      '## Disponibile anche da CLI','',
       FENCE+'bash',
-      'claude                       # 대화형',
+      'claude                       # interattivo',
       'Ingest raw/some-article.md',
-      'Self-Attention이 뭐야?',
+      'What is Self-Attention?',
       'Lint the wiki',
       FENCE,'',
-      '대시보드의 모든 작업은 터미널에서도 동일하게 수행됩니다.','',
+      'Le stesse operazioni si possono eseguire anche da terminale.','',
       '---','',
-      '## 지식이 쌓이는 방식','',
-      '1. 소스를 `raw/`에 넣거나 수집 UI에 붙여넣습니다.',
-      '2. Claude가 읽고 소스 요약 페이지 + 관련 엔티티/개념 페이지를 만듭니다.',
-      '3. 모든 사실 주장에 `[^src-*]` 인용이 붙습니다.',
-      '4. `index.md`, `log.md`, `overview.md`가 자동 갱신됩니다.',
-      '5. `ingest-reports/`에 WHY 보고서가 기록됩니다.',
-      '6. git 커밋이 남고, 언제든 되돌릴 수 있습니다.',
-      '7. 다음 소스가 들어오면 기존 지식 위에 쌓입니다.','',
-      '모순이 발견되면 LLM_WIKI.md의 3가지 정책(Historical / Disputed / Superseded) 중 적합한 것이 적용됩니다.','',
+      '## Come cresce la conoscenza','',
+      '1. Aggiungi una fonte in `raw/` o incollala in Ingest.',
+      '2. Claude aggiorna source summary e pagine correlate.',
+      '3. Le affermazioni fattuali ricevono citazioni `[^src-*]`.',
+      '4. `index.md`, `log.md` e `overview.md` si aggiornano.',
+      '5. Viene creato un commit git ripristinabile.','',
       '---','',
-      '## 팁','',
-      '- 한 번에 **하나**의 소스만 수집하세요. 품질이 올라갑니다.',
-      '- **Reflect**는 주 1회 정도 권장 (대시보드가 7일 지나면 배지로 알림).',
-      '- **Provenance**에서 빨간색 페이지는 인용 부족 — Fix 버튼으로 보완.',
-      '- **Write**로 만든 초안은 위키에 저장 → 새 분석 페이지가 됩니다.',
-      '- Obsidian을 함께 켜두면 그래프 뷰에서 **실시간 반영**을 볼 수 있습니다.',
+      '## Suggerimenti','',
+      '- Importa una fonte alla volta per aumentare la qualita.',
+      '- Esegui Reflect settimanalmente.',
+      '- Usa Provenance/Fix per completare le citazioni mancanti.',
     ].join('\n');
   }
   return [
@@ -2264,7 +2299,7 @@ function buildGuide(lang){
     '- **Wiki Ratio** — how often Claude reached into the wiki vs raw on recent queries. Below 0.4 means the wiki isn\'t replacing raw.',
     '- **Index badge** — `flat` / `hierarchical` / `indexed` (auto-switches with size).',
     '- **Model dropdown** — Claude model (Opus 4.7 / Sonnet 4.6 / Haiku 4.5 / Default).',
-    '- **EN / 한국어 toggle** — UI language.','',
+    '- **EN / IT toggle** — UI language.','',
     '---','',
     '## Per-page actions','',
     'Top-right of each wiki page:',
@@ -2322,8 +2357,8 @@ function showGuide(){
 }
 
 function buildGuideControls(alreadySeen){
-  var label=alreadySeen?(LANG==='ko'?'가이드 (완료)':'Guide (already seen)'):(LANG==='ko'?'스트리밍 중...':'Streaming...');
-  var btnLabel=alreadySeen?(LANG==='ko'?'다시 스트리밍':'Restart stream'):(LANG==='ko'?'건너뛰기':'Skip');
+  var label=alreadySeen?(LANG==='it'?'Guida (gia vista)':'Guide (already seen)'):(LANG==='it'?'Streaming in corso...':'Streaming...');
+  var btnLabel=alreadySeen?(LANG==='it'?'Riavvia streaming':'Restart stream'):(LANG==='it'?'Salta':'Skip');
   var btnHandler=alreadySeen?'restartGuideStream()':'skipGuideStream()';
   return '<div class="guide-controls">'+
     '<span class="gc-label" id="gcLabel">'+label+'</span>'+
@@ -2358,14 +2393,14 @@ function finishStream(){
   var el=document.getElementById('guideBody');
   if(el)el.innerHTML=marked.parse(streamingState.md);
   var label=document.getElementById('gcLabel');
-  if(label)label.textContent=LANG==='ko'?'가이드 (완료)':'Guide (done)';
+  if(label)label.textContent=LANG==='it'?'Guida (completata)':'Guide (done)';
   var progress=document.getElementById('gcProgress');
   if(progress)progress.style.width='100%';
   var ctrl=document.querySelector('.guide-controls');
   if(ctrl){
     var btn=ctrl.querySelector('button');
     if(btn){
-      btn.textContent=LANG==='ko'?'다시 스트리밍':'Restart stream';
+      btn.textContent=LANG==='it'?'Riavvia streaming':'Restart stream';
       btn.setAttribute('onclick','restartGuideStream()');
     }
   }
