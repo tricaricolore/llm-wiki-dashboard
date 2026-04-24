@@ -1337,7 +1337,7 @@ class Handler(SimpleHTTPRequestHandler):
                 return self._json(get_strategy(WIKI_DIR))
             if path == "/api/raw/integrity":
                 return self._json(check_raw_integrity())
-            if path == "/api/claude/diagnose":
+            if path in ("/api/claude/diagnose", "/api/provider/diagnose"):
                 return self._json(diagnose_claude())
             if path == "/api/review/list":
                 return self._json(do_review_list())

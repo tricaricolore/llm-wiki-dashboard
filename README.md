@@ -46,8 +46,9 @@ npm install -g @anthropic-ai/claude-code
 claude
 ```
 
-The current code shells out to `claude -p`. A future provider layer can add
-Copilot CLI or other local/enterprise-approved providers.
+The default provider shells out to `claude -p`. The Copilot provider shells out
+to `copilot -p` and can use GitHub Copilot routing or a local/BYOK provider via
+Copilot CLI environment variables.
 
 ## Quick Start
 

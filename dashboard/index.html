@@ -474,7 +474,7 @@ main{display:flex;flex-direction:column;overflow:hidden;min-width:0}
     </div>
     <div class="slist" id="slist"></div>
     <div class="status-bar" id="statusBar">
-      <div class="status-row"><div class="status-dot loading" id="dotClaude"></div><span class="status-label"><span data-i18n="status_claude">Claude CLI</span> <b id="lblClaude">checking...</b></span></div>
+      <div class="status-row"><div class="status-dot loading" id="dotClaude"></div><span class="status-label"><span data-i18n="status_claude">LLM Provider</span> <b id="lblClaude">checking...</b></span></div>
       <div class="status-row"><div class="status-dot loading" id="dotObsidian"></div><span class="status-label">Obsidian <b id="lblObsidian">checking...</b></span></div>
     </div>
   </aside>
@@ -539,7 +539,7 @@ const I18N={
   en:{
     search_placeholder:'Search pages...',
     tab_tree:'Tree', tab_pages:'Pages', tab_log:'Log',
-    status_claude:'Claude CLI',
+    status_claude:'LLM Provider',
     nav_page:'Page', nav_ingest:'+ Ingest', nav_query:'Query', nav_lint:'Lint',
     nav_reflect:'Reflect', nav_write:'Write', nav_compare:'Compare', nav_review:'Review',
     nav_search:'Search', nav_graph:'Graph', nav_history:'History', nav_provenance:'Provenance',
@@ -547,7 +547,7 @@ const I18N={
     ingest_title:'Ingest Source',
     ingest_desc:'Paste content and click Ingest. It will be saved to raw/ and Claude will generate wiki pages.',
     field_title:'Title', field_content:'Content (Markdown)', field_folder:'Target Folder',
-    ingest_btn:'Ingest with Claude', ingest_processing:'Calling Claude CLI...',
+    ingest_btn:'Ingest', ingest_processing:'Calling LLM provider...',
     ingest_done:'Ingest Complete',
     query_title:'Query', query_desc:'Ask questions against the accumulated wiki. Claude finds relevant pages and synthesizes an answer.',
     field_question:'Question', query_btn:'Ask Claude', query_processing:'Claude is searching the wiki...',
@@ -620,7 +620,7 @@ const I18N={
   ko:{
     search_placeholder:'페이지 검색...',
     tab_tree:'트리', tab_pages:'페이지', tab_log:'로그',
-    status_claude:'Claude CLI',
+    status_claude:'LLM Provider',
     nav_page:'페이지', nav_ingest:'+ 수집', nav_query:'질문', nav_lint:'검진',
     nav_reflect:'성찰', nav_write:'작성', nav_compare:'비교', nav_review:'복습',
     nav_search:'검색', nav_graph:'그래프', nav_history:'이력', nav_provenance:'출처',
@@ -1426,7 +1426,7 @@ async function doIngest(){
       var html='<div style="white-space:pre-wrap">'+esc(errText)+'</div>';
       // timeout 또는 연결 문제일 때 진단 버튼 추가
       if(errText.toLowerCase().indexOf('timeout')>=0||errText.toLowerCase().indexOf('not found')>=0){
-        html+='<div style="margin-top:12px"><button class="btn btn-outline" onclick="runClaudeDiagnose()">'+(LANG==='ko'?'Claude CLI 진단 실행':'Run Claude CLI diagnostic')+'</button></div>';
+        html+='<div style="margin-top:12px"><button class="btn btn-outline" onclick="runClaudeDiagnose()">'+(LANG==='ko'?'LLM Provider 진단 실행':'Run LLM provider diagnostic')+'</button></div>';
       }
       if(d.claude_output)html+='<div style="margin-top:8px;font-size:11px;opacity:.7">'+esc(d.claude_output)+'</div>';
       res.className='result-box err';
@@ -1441,9 +1441,9 @@ async function doIngest(){
 }
 
 async function runClaudeDiagnose(){
-  toast(LANG==='ko'?'Claude CLI 점검 중...':'Diagnosing Claude CLI...','info');
+  toast(LANG==='ko'?'LLM Provider 점검 중...':'Diagnosing LLM provider...','info');
   try{
-    var r=await fetch('/api/claude/diagnose');var d=await r.json();
+    var r=await fetch('/api/provider/diagnose');var d=await r.json();
     var lines=[];
     lines.push('CLI installed: '+(d.cli_installed?'✓':'✗'));
     if(d.version)lines.push('Version: '+d.version);
